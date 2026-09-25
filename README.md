@@ -11,8 +11,6 @@
 
 **Destacado:** persistencia en dos bases de datos con compensación ante fallos, versionado de formularios con concurrencia optimista, estadísticas con agregaciones de MongoDB, interfaz accesible y **455 pruebas automatizadas** en integración continua.
 
-![Demostración: crear un formulario, publicarlo, responderlo y ver los resultados](docs/demo.gif)
-
 ## Contenido
 
 - [Funcionalidades](#funcionalidades)
@@ -40,21 +38,13 @@
 
 ## Capturas
 
-| Mis formularios | Editor |
+| Editor | Resultados |
 |---|---|
-| ![Lista de formularios con estados y un formulario compartido](docs/capturas/mis-formularios.png) | ![Editor con preguntas de varios tipos](docs/capturas/editor.png) |
+| ![Editor de un formulario publicado, con el aviso de versionado](docs/capturas/editor.png) | ![Resultados con indicadores, respuestas por día y el detalle de una pregunta](docs/capturas/resultados.png) |
 
-| Resultados | Distribución de una escala |
+| Formulario público | Confirmación |
 |---|---|
-| ![Resultados con indicadores y respuestas por día](docs/capturas/resultados.png) | ![Distribución de una pregunta de escala con advertencia de rango](docs/capturas/resultados-escala.png) |
-
-| Equipo | Conflicto de edición |
-|---|---|
-| ![Miembros de un equipo con sus roles](docs/capturas/equipo.png) | ![Aviso de que otra persona guardó una versión más nueva](docs/capturas/conflicto-version.png) |
-
-| Formulario público en el celular | Errores de validación |
-|---|---|
-| <img src="docs/capturas/publico-movil.png" alt="Formulario público en un celular" width="300"> | <img src="docs/capturas/publico-errores-movil.png" alt="Resumen de errores en el formulario público" width="300"> |
+| ![Formulario público listo para responder](docs/capturas/publico.png) | ![Confirmación después de enviar la respuesta](docs/capturas/confirmacion.png) |
 
 ## Stack
 
