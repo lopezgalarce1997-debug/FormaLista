@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { destinoSeguro } from '../src/auth/rutas';
 import { renderizarApp } from './renderizar';
-import { ana, conSesion, servidor } from './servidor';
+import { ana, conSesion, detalleDePrueba, servidor } from './servidor';
 
 const ubicacion = () => screen.getByTestId('ubicacion').textContent;
 
@@ -50,14 +50,17 @@ describe('Login', () => {
   });
 
   it('conserva un destino profundo: entra directo a la página que pedía, sin pasar por la lista', async () => {
-    servidor.use(http.post('/api/auth/login', () => HttpResponse.json({ usuario: ana, token: 'ignorado' })));
+    servidor.use(
+      http.post('/api/auth/login', () => HttpResponse.json({ usuario: ana, token: 'ignorado' })),
+      http.get('/api/formularios/abc', () => HttpResponse.json(detalleDePrueba({ id: 'abc', titulo: 'Encuesta profunda' }))),
+    );
     const { usuario } = renderizarApp('/formularios/abc/editar');
 
     await usuario.type(await screen.findByLabelText('Email'), 'ana@correo.cl');
     await usuario.type(screen.getByLabelText('Contraseña'), 'secreta123');
     await usuario.click(screen.getByRole('button', { name: 'Entrar' }));
 
-    expect(await screen.findByRole('heading', { name: 'Editor' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Encuesta profunda', level: 1 })).toBeInTheDocument();
     expect(ubicacion()).toBe('/formularios/abc/editar');
   });
 
