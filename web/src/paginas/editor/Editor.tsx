@@ -6,6 +6,7 @@ import { ErrorApi } from '../../api/cliente';
 import { apiFormularios, clavesFormularios, type Detalle } from '../../api/formularios';
 import { Dialogo } from '../../componentes/Dialogo';
 import { InsigniaEstado } from '../../componentes/insignias';
+import { Pestanas, type Pestana as PestanaDef } from '../../componentes/Pestanas';
 import { NOMBRE_TIPO, TIPOS } from '../../componentes/tiposPregunta';
 import { Alerta, Boton, Campo } from '../../componentes/ui';
 import { AccionesFormulario } from './AccionesFormulario';
@@ -32,7 +33,7 @@ export function Editor({ detalle }: { detalle: Detalle }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const [conflicto, setConflicto] = useState(false);
   const [enfocar, setEnfocar] = useState<{ clave: string; direccion: 'subir' | 'bajar' } | null>(null);
-  const [pestana, setPestana] = useState<Pestana>('editar');
+  const [pestana, setPestana] = useState<Modo>('editar');
 
   const formulario = useForm<FormularioEditable>({ defaultValues: aEditable(detalle), resolver: resolverEditor });
   const { register, handleSubmit, reset, setError, formState, control } = formulario;
@@ -127,7 +128,7 @@ export function Editor({ detalle }: { detalle: Detalle }) {
         </div>
 
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <Pestanas activa={pestana} alCambiar={setPestana} />
+          <Pestanas prefijo="pestana" etiqueta="Modo" pestanas={MODOS} activa={pestana} alCambiar={setPestana} />
           <AccionesFormulario detalle={detalle} hayCambios={formState.isDirty} />
         </div>
 
@@ -238,44 +239,12 @@ export function Editor({ detalle }: { detalle: Detalle }) {
 
 const ID_FORMULARIO = 'formulario-editor';
 
-type Pestana = 'editar' | 'vista';
+type Modo = 'editar' | 'vista';
 
-/**
- * Pestañas con el patrón accesible de WAI-ARIA: role tablist/tab/tabpanel, aria-selected, y
- * flechas ← → para cambiar de pestaña (con Tab se sale del grupo, no se recorre cada pestaña).
- */
-function Pestanas({ activa, alCambiar }: { activa: Pestana; alCambiar: (p: Pestana) => void }) {
-  const pestanas: { valor: Pestana; texto: string }[] = [
-    { valor: 'editar', texto: 'Editar' },
-    { valor: 'vista', texto: 'Vista previa' },
-  ];
-  const alTeclear = (evento: React.KeyboardEvent) => {
-    if (evento.key !== 'ArrowRight' && evento.key !== 'ArrowLeft') return;
-    const siguiente = activa === 'editar' ? 'vista' : 'editar';
-    alCambiar(siguiente);
-    document.getElementById(`pestana-${siguiente}`)?.focus();
-  };
-  return (
-    <div role="tablist" aria-label="Modo" className="inline-flex rounded-lg bg-slate-100 p-1" onKeyDown={alTeclear}>
-      {pestanas.map(({ valor, texto }) => (
-        <button
-          key={valor}
-          id={`pestana-${valor}`}
-          type="button"
-          role="tab"
-          aria-selected={activa === valor}
-          tabIndex={activa === valor ? 0 : -1}
-          onClick={() => alCambiar(valor)}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-            activa === valor ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          {texto}
-        </button>
-      ))}
-    </div>
-  );
-}
+const MODOS: PestanaDef<Modo>[] = [
+  { valor: 'editar', texto: 'Editar' },
+  { valor: 'vista', texto: 'Vista previa' },
+];
 
 /** "preguntas.0.opciones.1" viene como texto: los segmentos numéricos vuelven a ser números. */
 function aSegmento(segmento: string): string | number {
