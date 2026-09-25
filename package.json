@@ -8,6 +8,7 @@
     "dev": "npm run dev -w api",
     "build": "npm run build -w api",
     "test": "npm test --workspaces --if-present",
+    "test:integracion": "npm run test:integracion -w api",
     "migrar": "npm run migrar -w api",
     "limpiar-huerfanos": "npm run limpiar-huerfanos -w api"
   },

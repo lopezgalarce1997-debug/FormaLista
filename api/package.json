@@ -11,7 +11,13 @@
     "limpiar-huerfanos": "tsx src/scripts/limpiarHuerfanos.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:integracion": "vitest run --config vitest.integracion.config.ts"
+  },
+  "config": {
+    "mongodbMemoryServer": {
+      "version": "8.2.6"
+    }
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -26,6 +32,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.2",
     "@types/supertest": "^7.2.1",
+    "mongodb-memory-server": "^11.3.0",
     "supertest": "^7.3.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
