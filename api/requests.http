@@ -33,6 +33,9 @@ Content-Type: application/json
 GET {{baseUrl}}/auth/yo
 Authorization: Bearer {{login.response.body.token}}
 
+### Cerrar sesión (borra la cookie httpOnly que usa el navegador; con Bearer no tiene efecto)
+POST {{baseUrl}}/auth/logout
+
 ### Login con contraseña incorrecta (espera 401)
 POST {{baseUrl}}/auth/login
 Content-Type: application/json

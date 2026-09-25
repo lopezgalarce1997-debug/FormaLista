@@ -49,6 +49,7 @@ const app = crearApp({
   servicioResultados,
   servicioEquipos,
   limites: { envioRespuestas: config.limiteRespuestas },
+  cookieSegura: config.entorno === 'production',
 });
 
 const servidor = app.listen(config.puerto, () => {

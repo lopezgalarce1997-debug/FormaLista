@@ -23,6 +23,8 @@ export interface DependenciasApp {
   servicioEquipos: ServicioEquipos;
   /** Opcional: por defecto LIMITES_POR_DEFECTO. Las pruebas lo cambian para no esperar 15 minutos. */
   limites?: Partial<ConfigLimites>;
+  /** Cookie de sesión solo por HTTPS (true en producción). Por defecto false (desarrollo local). */
+  cookieSegura?: boolean;
 }
 
 /**
@@ -37,7 +39,7 @@ export function crearApp(deps: DependenciasApp): Express {
   app.use(express.json({ limit: '100kb' }));
 
   app.use('/api/salud', crearRutasSalud(deps.verificadoresSalud));
-  app.use('/api/auth', crearRutasAuth(deps.servicioAuth, deps.servicioTokens, limites));
+  app.use('/api/auth', crearRutasAuth(deps.servicioAuth, deps.servicioTokens, limites, deps.cookieSegura ?? false));
   app.use(
     '/api/formularios',
     crearRutasFormularios(deps.servicioFormularios, deps.servicioResultados, deps.servicioTokens),
