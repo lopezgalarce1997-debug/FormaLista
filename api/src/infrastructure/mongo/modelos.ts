@@ -85,7 +85,7 @@ const esquemaFormulario = new Schema<DocFormulario>(
 // Cada valor ya viene validado y normalizado por el dominio (texto, número o lista de textos).
 const esquemaRespuesta = new Schema<DocRespuesta>(
   {
-    formularioId: { type: Schema.Types.ObjectId, required: true, index: true },
+    formularioId: { type: Schema.Types.ObjectId, required: true },
     version: { type: Number, required: true },
     respuestas: {
       type: [{ _id: false, preguntaId: { type: String, required: true }, valor: Schema.Types.Mixed }],
@@ -95,6 +95,12 @@ const esquemaRespuesta = new Schema<DocRespuesta>(
   },
   { collection: 'respuestas', versionKey: false },
 );
+
+// Índices compuestos (reemplazan al índice simple de formularioId, que es prefijo de ambos):
+// - "todas las versiones": filtra por formulario y ordena por fecha (listado, borrado, estadísticas).
+// - "una versión": filtra por formulario + versión y ordena por fecha.
+esquemaRespuesta.index({ formularioId: 1, enviadaEn: -1 });
+esquemaRespuesta.index({ formularioId: 1, version: 1, enviadaEn: -1 });
 
 export const ModeloFormulario = model<DocFormulario>('Formulario', esquemaFormulario);
 export const ModeloRespuesta = model<DocRespuesta>('Respuesta', esquemaRespuesta);
