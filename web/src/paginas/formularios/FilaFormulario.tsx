@@ -1,7 +1,7 @@
 import { puede } from '@formalista/compartido';
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { linkPublico, type Resumen } from '../../api/formularios';
+import type { Resumen } from '../../api/formularios';
+import { BotonCopiarLink } from '../../componentes/BotonCopiarLink';
 import { InsigniaCompartido, InsigniaEstado } from '../../componentes/insignias';
 import { haceTiempo } from '../../componentes/tiempo';
 import { Boton, clasesBoton } from '../../componentes/ui';
@@ -43,32 +43,5 @@ export function FilaFormulario({ formulario, alEliminar }: { formulario: Resumen
         )}
       </div>
     </li>
-  );
-}
-
-function BotonCopiarLink({ slug }: { slug: string }) {
-  const [estado, setEstado] = useState<'listo' | 'copiado' | 'error'>('listo');
-
-  // Vuelve al texto original después de 2 segundos.
-  useEffect(() => {
-    if (estado === 'listo') return;
-    const temporizador = setTimeout(() => setEstado('listo'), 2000);
-    return () => clearTimeout(temporizador);
-  }, [estado]);
-
-  const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(linkPublico(slug));
-      setEstado('copiado');
-    } catch {
-      setEstado('error');
-    }
-  };
-
-  return (
-    // aria-live: el lector de pantalla anuncia "Link copiado" sin mover el foco.
-    <Boton variante="secundario" tamano="chico" onClick={copiar} aria-live="polite">
-      {estado === 'copiado' ? '¡Link copiado!' : estado === 'error' ? 'No se pudo copiar' : 'Copiar link'}
-    </Boton>
   );
 }
