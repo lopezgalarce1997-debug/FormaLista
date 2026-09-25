@@ -1,17 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import {
-  crearSlug,
-  decidirEdicion,
-  TRANSICIONES,
-  validarCambioDeTipos,
-  validarDefinicion,
-  validarTransicion,
-  type AccionEstado,
-  type EstadoFormulario,
-  type Formulario,
-  type Pregunta,
-} from '../domain/formulario.js';
-import { rolEnFormulario, type AccionFormulario, type RolFormulario } from '../domain/permisos.js';
+import { type AccionEstado, type AccionFormulario, crearSlug, decidirEdicion, type EstadoFormulario, type Formulario, type Pregunta, rolEnFormulario, type RolFormulario, TRANSICIONES, validarCambioDeTipos, validarDefinicion, validarTransicion } from '@formalista/compartido';
 import { autorizar, formularioNoEncontrado, type AccesoAutorizado } from './acceso.js';
 import { ErrorAplicacion } from './errores.js';
 import type {

@@ -1,7 +1,7 @@
 import type { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { ErrorAplicacion } from '../../application/errores.js';
 import type { Equipo, EquipoDeUsuario, Miembro, RepositorioEquipos } from '../../application/puertos.js';
-import type { MiembroActual, RolEquipo } from '../../domain/permisos.js';
+import type { MiembroActual, RolEquipo } from '@formalista/compartido';
 import { enTransaccion } from './transaccion.js';
 
 interface FilaEquipo extends RowDataPacket {

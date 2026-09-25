@@ -7,7 +7,7 @@ import {
   validarDefinicion,
   validarTransicion,
   type Pregunta,
-} from '../../src/domain/formulario.js';
+} from '../src/dominio/formulario.js';
 
 const texto = (id: string): Pregunta => ({ id, tipo: 'texto_corto', texto: '¿Nombre?', obligatoria: true });
 

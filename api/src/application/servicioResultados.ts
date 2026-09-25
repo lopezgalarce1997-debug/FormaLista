@@ -1,11 +1,4 @@
-import {
-  construirResultados,
-  idsPorTipo,
-  type Resultados,
-  type SeleccionVersion,
-} from '../domain/estadisticas.js';
-import type { TipoPregunta, VersionFormulario } from '../domain/formulario.js';
-import type { ValorRespuesta } from '../domain/respuesta.js';
+import { construirResultados, idsPorTipo, type Resultados, type SeleccionVersion, type TipoPregunta, type ValorRespuesta, type VersionFormulario } from '@formalista/compartido';
 import { autorizar, formularioNoEncontrado } from './acceso.js';
 import { ErrorAplicacion } from './errores.js';
 import type {

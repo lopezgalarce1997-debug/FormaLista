@@ -1,5 +1,4 @@
-import { validarCambioDeMiembro, type RolEquipo } from '../domain/permisos.js';
-import { normalizarEmail } from '../domain/usuario.js';
+import { normalizarEmail, type RolEquipo, validarCambioDeMiembro } from '@formalista/compartido';
 import { ErrorAplicacion } from './errores.js';
 import type { Equipo, EquipoDeUsuario, Miembro, RepositorioEquipos, RepositorioUsuarios } from './puertos.js';
 

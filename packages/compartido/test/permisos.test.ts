@@ -5,7 +5,7 @@ import {
   validarCambioDeMiembro,
   type AccionFormulario,
   type RolFormulario,
-} from '../../src/domain/permisos.js';
+} from '../src/dominio/permisos.js';
 
 describe('rolEnFormulario', () => {
   it.each([

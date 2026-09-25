@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Pregunta, PreguntaEscala, PreguntaOpciones, PreguntaTexto } from '../../src/domain/formulario.js';
-import { MAX_CARACTERES, validarRespuestas } from '../../src/domain/respuesta.js';
+import type { Pregunta, PreguntaEscala, PreguntaOpciones, PreguntaTexto } from '../src/dominio/formulario.js';
+import { MAX_CARACTERES, validarRespuestas } from '../src/dominio/respuesta.js';
 
 const escala = (id: string, cambios: Partial<PreguntaEscala> = {}): PreguntaEscala => ({
   id,

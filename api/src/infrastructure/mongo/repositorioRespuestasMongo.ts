@@ -6,8 +6,7 @@ import type {
   RepositorioRespuestas,
   RespuestaGuardada,
 } from '../../application/puertos.js';
-import type { AgregadosCrudos } from '../../domain/estadisticas.js';
-import type { ValorRespuesta } from '../../domain/respuesta.js';
+import type { AgregadosCrudos, ValorRespuesta } from '@formalista/compartido';
 import { ModeloRespuesta, type DocRespuesta } from './modelos.js';
 
 /** Cuántos textos recientes se devuelven por pregunta de texto (el resto se ve en el listado). */

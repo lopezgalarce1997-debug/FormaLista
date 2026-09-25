@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Pregunta } from '../../src/domain/formulario.js';
+import type { Pregunta } from '@formalista/compartido';
 import { ModeloFormulario } from '../../src/infrastructure/mongo/modelos.js';
 import { RepositorioFormulariosMongo } from '../../src/infrastructure/mongo/repositorioFormulariosMongo.js';
 import { usarMongoEnMemoria } from './mongo.js';

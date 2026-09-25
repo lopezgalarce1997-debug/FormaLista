@@ -1,17 +1,8 @@
+import { esquemaEnvio, type DatosEnvio } from '@formalista/compartido';
 import { Router, type Request } from 'express';
-import { z } from 'zod';
 import type { ServicioPublico } from '../../application/servicioPublico.js';
-import type { EntradaRespuestas } from '../../domain/respuesta.js';
 import { crearLimitador, type ConfigLimites } from '../middlewares/limites.js';
 import { validarCuerpo } from '../middlewares/validar.js';
-
-// Aquí solo se valida la forma general. El valor de cada respuesta lo valida el dominio
-// contra la definición del formulario (validarRespuestas).
-const esquemaEnvio = z.object({
-  respuestas: z.record(z.string(), z.unknown()),
-  /** Versión que vio quien responde (viene en el GET público). Si se omite, se usa la vigente. */
-  version: z.number().int().positive().optional(),
-});
 
 const slugDe = (req: Request): string => String(req.params.slug);
 
@@ -28,7 +19,7 @@ export function crearRutasPublicas(servicio: ServicioPublico, limites: ConfigLim
     crearLimitador(limites.envioRespuestas),
     validarCuerpo(esquemaEnvio),
     async (req, res) => {
-      const { respuestas, version }: { respuestas: EntradaRespuestas; version?: number } = req.body;
+      const { respuestas, version }: DatosEnvio = req.body;
       res.status(201).json(await servicio.responder(slugDe(req), respuestas, version));
     },
   );

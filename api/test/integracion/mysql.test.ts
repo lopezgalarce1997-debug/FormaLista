@@ -1,7 +1,7 @@
 import type { RowDataPacket } from 'mysql2/promise';
 import { describe, expect, it } from 'vitest';
 import { ErrorAplicacion } from '../../src/application/errores.js';
-import { validarCambioDeMiembro } from '../../src/domain/permisos.js';
+import { validarCambioDeMiembro } from '@formalista/compartido';
 import { RepositorioEquiposMySql } from '../../src/infrastructure/mysql/repositorioEquiposMySql.js';
 import {
   CONSULTA_ACCESIBLES,

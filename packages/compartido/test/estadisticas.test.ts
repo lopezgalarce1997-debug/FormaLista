@@ -5,8 +5,8 @@ import {
   idsPorTipo,
   type AgregadosCrudos,
   type EstadisticaPregunta,
-} from '../../src/domain/estadisticas.js';
-import type { Pregunta, VersionFormulario } from '../../src/domain/formulario.js';
+} from '../src/dominio/estadisticas.js';
+import type { Pregunta, VersionFormulario } from '../src/dominio/formulario.js';
 
 const vacios: AgregadosCrudos = {
   total: 0,

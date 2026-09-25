@@ -4,8 +4,7 @@ import type {
   RegistroFormulario,
   RepositorioRegistroFormularios,
 } from '../../application/puertos.js';
-import type { EstadoFormulario } from '../../domain/formulario.js';
-import type { RolEquipo } from '../../domain/permisos.js';
+import type { EstadoFormulario, RolEquipo } from '@formalista/compartido';
 
 interface FilaRegistro extends RowDataPacket {
   id_mongo: string;

@@ -1,4 +1,4 @@
-import { aUsuarioPublico, normalizarEmail, type Usuario, type UsuarioPublico } from '../domain/usuario.js';
+import { aUsuarioPublico, normalizarEmail, type Usuario, type UsuarioPublico } from '@formalista/compartido';
 import { ErrorAplicacion } from './errores.js';
 import type { Hasheador, RepositorioUsuarios, ServicioTokens } from './puertos.js';
 

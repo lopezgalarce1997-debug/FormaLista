@@ -1,6 +1,6 @@
 import { ErrorAplicacion } from '../../src/application/errores.js';
 import type { NuevoUsuario, RepositorioUsuarios } from '../../src/application/puertos.js';
-import type { Usuario } from '../../src/domain/usuario.js';
+import type { Usuario } from '@formalista/compartido';
 
 /** Repositorio falso que imita el comportamiento de MySQL, incluido el índice único del email. */
 export class RepositorioUsuariosEnMemoria implements RepositorioUsuarios {

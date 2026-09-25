@@ -1,19 +1,11 @@
+import { esquemaCambioRol, esquemaEquipo, esquemaNuevoMiembro } from '@formalista/compartido';
 import { Router, type Request } from 'express';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { ErrorAplicacion } from '../../application/errores.js';
 import type { ServicioTokens } from '../../application/puertos.js';
 import type { ServicioEquipos } from '../../application/servicioEquipos.js';
-import { ROLES_EQUIPO, type RolEquipo } from '../../domain/permisos.js';
 import { autenticar } from '../middlewares/autenticar.js';
 import { validarCuerpo } from '../middlewares/validar.js';
-
-const rol = z.enum(ROLES_EQUIPO as [RolEquipo, ...RolEquipo[]], 'Debe ser propietario, editor o lector');
-
-const esquemaEquipo = z.object({
-  nombre: z.string().trim().min(1, 'Es obligatorio').max(100, 'Máximo 100 caracteres'),
-});
-const esquemaNuevoMiembro = z.object({ email: z.email('Email inválido').max(255), rol });
-const esquemaCambioRol = z.object({ rol });
 
 /** Lee un id numérico de la ruta; si no es un entero positivo, el recurso no existe (404). */
 function idNumerico(req: Request, parametro: string, recurso: string): number {

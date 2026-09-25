@@ -1,6 +1,6 @@
 import { ErrorAplicacion } from '../../src/application/errores.js';
 import type { Equipo, EquipoDeUsuario, Miembro, RepositorioEquipos } from '../../src/application/puertos.js';
-import type { MiembroActual, RolEquipo } from '../../src/domain/permisos.js';
+import type { MiembroActual, RolEquipo } from '@formalista/compartido';
 import type { RepositorioUsuariosEnMemoria } from './repositorioUsuariosEnMemoria.js';
 
 /** Doble de MySQL (equipos + equipo_miembros). Usa el repositorio de usuarios para el "JOIN" con nombres. */

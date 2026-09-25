@@ -1,7 +1,7 @@
 import type { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { ErrorAplicacion } from '../../application/errores.js';
 import type { NuevoUsuario, RepositorioUsuarios } from '../../application/puertos.js';
-import type { Usuario } from '../../domain/usuario.js';
+import type { Usuario } from '@formalista/compartido';
 
 interface FilaUsuario extends RowDataPacket {
   id: number;

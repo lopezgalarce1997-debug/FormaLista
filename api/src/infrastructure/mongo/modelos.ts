@@ -1,5 +1,5 @@
 import { model, Schema, type Types } from 'mongoose';
-import { TIPOS_PREGUNTA, type TipoPregunta } from '../../domain/formulario.js';
+import { TIPOS_PREGUNTA, type TipoPregunta } from '@formalista/compartido';
 
 // ---- Forma de los documentos tal como se guardan en MongoDB ----
 

@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "verbatimModuleSyntax": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node"],
-    "customConditions": ["fuente"],
+    "types": [],
     "noEmit": true
   },
   "include": ["src", "test"]

@@ -1,10 +1,6 @@
 // Interfaces que la capa de aplicación necesita y que infrastructure implementa
 // (como las interfaces IRepository de la capa Application en Clean Architecture .NET).
-import type { AgregadosCrudos } from '../domain/estadisticas.js';
-import type { EstadoFormulario, Formulario, Pregunta, VersionFormulario } from '../domain/formulario.js';
-import type { MiembroActual, RolEquipo } from '../domain/permisos.js';
-import type { RespuestaValidada } from '../domain/respuesta.js';
-import type { Usuario } from '../domain/usuario.js';
+import type { AgregadosCrudos, EstadoFormulario, Formulario, MiembroActual, Pregunta, RespuestaValidada, RolEquipo, Usuario, VersionFormulario } from '@formalista/compartido';
 
 export interface NuevoUsuario {
   nombre: string;

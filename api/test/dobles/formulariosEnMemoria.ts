@@ -11,8 +11,7 @@ import type {
   RepositorioRespuestas,
   RespuestaGuardada,
 } from '../../src/application/puertos.js';
-import type { AgregadosCrudos } from '../../src/domain/estadisticas.js';
-import type { EstadoFormulario, Formulario, VersionFormulario } from '../../src/domain/formulario.js';
+import type { AgregadosCrudos, EstadoFormulario, Formulario, VersionFormulario } from '@formalista/compartido';
 import type { EquiposEnMemoria } from './equiposEnMemoria.js';
 
 /** Permite simular que una base de datos falla en un método concreto: `repo.fallarEn('crear')`. */

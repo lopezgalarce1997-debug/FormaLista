@@ -4,7 +4,7 @@ import {
   rolEnFormulario,
   type AccionFormulario,
   type RolFormulario,
-} from '../domain/permisos.js';
+} from '@formalista/compartido';
 import { ErrorAplicacion } from './errores.js';
 import type { AccesoFormulario, RepositorioRegistroFormularios } from './puertos.js';
 

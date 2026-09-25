@@ -1,6 +1,6 @@
 import { Types, type UpdateQuery } from 'mongoose';
 import type { ContenidoFormulario, ControlEdicion, RepositorioFormularios } from '../../application/puertos.js';
-import type { Formulario, Pregunta, VersionFormulario } from '../../domain/formulario.js';
+import type { Formulario, Pregunta, VersionFormulario } from '@formalista/compartido';
 import { ModeloFormulario, type DocFormulario, type DocPregunta } from './modelos.js';
 
 /** Proyección para lecturas normales: el historial puede ser grande y casi nunca se necesita. */

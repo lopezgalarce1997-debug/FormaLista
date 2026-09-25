@@ -1,5 +1,4 @@
-import { preguntasDeVersion, type Formulario, type Pregunta } from '../domain/formulario.js';
-import { validarRespuestas, type EntradaRespuestas } from '../domain/respuesta.js';
+import { type EntradaRespuestas, type Formulario, type Pregunta, preguntasDeVersion, validarRespuestas } from '@formalista/compartido';
 import { ErrorAplicacion } from './errores.js';
 import type { RepositorioFormularios, RepositorioRegistroFormularios, RepositorioRespuestas } from './puertos.js';
 

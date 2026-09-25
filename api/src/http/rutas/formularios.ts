@@ -1,3 +1,4 @@
+import { esquemaActualizacion, esquemaCompartir, esquemaFormulario } from '@formalista/compartido';
 import { Router, type Request } from 'express';
 import { z } from 'zod';
 import type { ServicioTokens } from '../../application/puertos.js';
@@ -10,42 +11,8 @@ import type { ServicioResultados } from '../../application/servicioResultados.js
 import { autenticar } from '../middlewares/autenticar.js';
 import { validarConsulta, validarCuerpo } from '../middlewares/validar.js';
 
-// Zod valida la FORMA (tipos, largos máximos). Las reglas de negocio (mínimo 2 opciones,
-// opciones sin repetir, escala con mínimo < máximo) están en domain/formulario.ts.
-const base = {
-  id: z.string().trim().min(1).max(64).optional(),
-  texto: z.string().trim().min(1, 'Es obligatorio').max(500, 'Máximo 500 caracteres'),
-  obligatoria: z.boolean().default(false),
-};
-const opciones = z.array(z.string().trim().min(1, 'La opción no puede estar vacía').max(200)).max(50);
-const valorEscala = z.number().int().min(0).max(10);
-
-const esquemaPregunta = z.discriminatedUnion('tipo', [
-  z.object({ ...base, tipo: z.literal('texto_corto') }),
-  z.object({ ...base, tipo: z.literal('texto_largo') }),
-  z.object({ ...base, tipo: z.literal('fecha') }),
-  z.object({ ...base, tipo: z.literal('opcion_unica'), opciones }),
-  z.object({ ...base, tipo: z.literal('opcion_multiple'), opciones }),
-  z.object({ ...base, tipo: z.literal('escala'), minimo: valorEscala.default(1), maximo: valorEscala.default(5) }),
-]);
-
-// z.object descarta los campos que no declara: el cliente no puede fijar slug ni estado.
-const esquemaFormulario = z.object({
-  titulo: z.string().trim().min(1, 'Es obligatorio').max(200, 'Máximo 200 caracteres'),
-  descripcion: z.string().trim().max(2000, 'Máximo 2000 caracteres').default(''),
-  preguntas: z.array(esquemaPregunta).max(100, 'Máximo 100 preguntas').default([]),
-});
-
-// Al editar, `version` es obligatoria: es la versión que el cliente tenía abierta (concurrencia
-// optimista). No fija la versión: el servidor la compara con la vigente y decide si sube.
-const esquemaActualizacion = esquemaFormulario.extend({
-  version: z.number('Es obligatoria (la versión que estabas editando)').int().positive(),
-});
-
-// equipoId es obligatorio para que "dejar de compartir" sea explícito: { "equipoId": null }.
-const esquemaCompartir = z.object({
-  equipoId: z.number('Indica el equipo (o null para dejar de compartir)').int().positive().nullable(),
-});
+// Los esquemas de cuerpo (formulario, actualización, compartir) vienen del paquete compartido,
+// para que la web valide con las mismas reglas. Los de query string son propios de la API.
 
 // ---- Query strings de resultados y listado ----
 
