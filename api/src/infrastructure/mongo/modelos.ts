@@ -24,6 +24,14 @@ export interface DocFormulario {
   actualizadoEn: Date;
 }
 
+export interface DocRespuesta {
+  _id: Types.ObjectId;
+  formularioId: Types.ObjectId;
+  version: number;
+  respuestas: { preguntaId: string; valor: unknown }[];
+  enviadaEn: Date;
+}
+
 // ---- Esquemas ----
 
 // Un solo esquema para todos los tipos: los campos que no aplican (p. ej. opciones en una fecha)
@@ -56,8 +64,8 @@ const esquemaFormulario = new Schema<DocFormulario>(
   },
 );
 
-// Estructura mínima de una respuesta; el paso 7 la completa al implementar el envío.
-const esquemaRespuesta = new Schema(
+// Cada valor ya viene validado y normalizado por el dominio (texto, número o lista de textos).
+const esquemaRespuesta = new Schema<DocRespuesta>(
   {
     formularioId: { type: Schema.Types.ObjectId, required: true, index: true },
     version: { type: Number, required: true },
@@ -71,4 +79,4 @@ const esquemaRespuesta = new Schema(
 );
 
 export const ModeloFormulario = model<DocFormulario>('Formulario', esquemaFormulario);
-export const ModeloRespuesta = model('Respuesta', esquemaRespuesta);
+export const ModeloRespuesta = model<DocRespuesta>('Respuesta', esquemaRespuesta);

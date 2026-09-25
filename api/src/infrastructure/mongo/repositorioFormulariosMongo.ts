@@ -14,6 +14,12 @@ export class RepositorioFormulariosMongo implements RepositorioFormularios {
     return documento ? aFormulario(documento) : null;
   }
 
+  async buscarPorSlug(slug: string): Promise<Formulario | null> {
+    // Usa el índice único de slug.
+    const documento = await ModeloFormulario.findOne({ slug }).lean<DocFormulario>();
+    return documento ? aFormulario(documento) : null;
+  }
+
   async buscarPorIds(ids: string[]): Promise<Formulario[]> {
     const documentos = await ModeloFormulario.find({ _id: { $in: ids } }).lean<DocFormulario[]>();
     return documentos.map(aFormulario);
