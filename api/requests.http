@@ -83,12 +83,15 @@ GET {{baseUrl}}/formularios/{{formulario.response.body.id}}
 Authorization: Bearer {{login.response.body.token}}
 
 ### Actualizar (reemplaza título, descripción y preguntas; el slug no cambia)
+# "version" es OBLIGATORIA: la que estabas editando (viene en el GET). Si ya no es la vigente → 409.
+# Si el formulario ya fue publicado y cambian las preguntas, se crea una versión nueva.
 PUT {{baseUrl}}/formularios/{{formulario.response.body.id}}
 Authorization: Bearer {{login.response.body.token}}
 Content-Type: application/json
 
 {
   "titulo": "Encuesta de café (v2)",
+  "version": 1,
   "preguntas": [
     { "tipo": "escala", "texto": "Del 1 al 5, ¿nos recomendarías?", "obligatoria": true }
   ]
@@ -114,11 +117,13 @@ Authorization: Bearer {{login.response.body.token}}
 GET {{baseUrl}}/publico/{{formulario.response.body.slug}}
 
 ### Responder (SIN token). Claves = id de cada pregunta: cópialos del GET anterior.
+# "version" (opcional) = la que viste en el GET; si el formulario cambió después, se valida contra esa.
 # Máximo 60 envíos por IP cada 15 minutos por defecto (LIMITE_RESPUESTAS_* en .env); luego responde 429.
 POST {{baseUrl}}/publico/{{formulario.response.body.slug}}/respuestas
 Content-Type: application/json
 
 {
+  "version": 1,
   "respuestas": {
     "REEMPLAZA-ID-PREGUNTA-1": "Ana",
     "REEMPLAZA-ID-PREGUNTA-2": "Latte"
