@@ -1,36 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { CuerpoActualizacion, Detalle } from '../src/api/formularios';
+import { conFormulario } from './apiSimulada';
 import { renderizarApp } from './renderizar';
 import { conSesion, detalleDePrueba, servidor } from './servidor';
-
-/**
- * API simulada del formulario f1 con memoria: GET devuelve el estado actual; PUT lo guarda
- * (asignando ids a las preguntas nuevas) y responde 409 si la versión enviada ya no es la vigente.
- */
-function conFormulario(inicial: Detalle, opciones: { versionNueva?: boolean } = {}) {
-  const estado = { actual: inicial, cuerpos: [] as CuerpoActualizacion[] };
-  servidor.use(
-    http.get('/api/formularios/f1', () => HttpResponse.json(estado.actual)),
-    http.put('/api/formularios/f1', async ({ request }) => {
-      const cuerpo = (await request.json()) as CuerpoActualizacion;
-      estado.cuerpos.push(cuerpo);
-      if (cuerpo.version !== estado.actual.version) {
-        return HttpResponse.json({ error: 'El formulario fue modificado por otra persona' }, { status: 409 });
-      }
-      estado.actual = {
-        ...estado.actual,
-        titulo: cuerpo.titulo,
-        descripcion: cuerpo.descripcion ?? '',
-        version: estado.actual.version + (opciones.versionNueva ? 1 : 0),
-        preguntas: (cuerpo.preguntas ?? []).map((p, i) => ({ obligatoria: false, ...p, id: p.id ?? `srv-${i}` })) as Detalle['preguntas'],
-      };
-      return HttpResponse.json(estado.actual);
-    }),
-  );
-  return estado;
-}
 
 const pregunta = (n: number) => screen.getByRole('group', { name: `Pregunta ${n}` });
 const guardar = () => screen.getByRole('button', { name: 'Guardar' });
