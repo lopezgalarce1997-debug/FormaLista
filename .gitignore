@@ -27,3 +27,6 @@ Thumbs.db
 
 # Binario de MongoDB descargado en CI (mongodb-memory-server)
 .cache/
+
+# Notas de trabajo locales (no se publican)
+CLAUDE.md
