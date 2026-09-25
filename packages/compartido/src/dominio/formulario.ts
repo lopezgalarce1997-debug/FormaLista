@@ -153,29 +153,44 @@ export function validarCambioDeTipos(anteriores: Pregunta[], nuevas: Pregunta[])
   });
 }
 
-/** Reglas de negocio de la definición de un formulario. Devuelve la lista de errores (vacía si es válida). */
-export function validarDefinicion(preguntas: Pregunta[]): string[] {
-  const errores: string[] = [];
+/** Un error de la definición, ubicado: la web lo muestra bajo el campo; la API lo resume en texto. */
+export interface ErrorDefinicion {
+  /** Posición de la pregunta (desde 0). */
+  indice: number;
+  campo: 'id' | 'opciones' | 'minimo';
+  mensaje: string;
+}
+
+/** Reglas de negocio de la definición de un formulario, con la pregunta y el campo de cada error. */
+export function erroresDeDefinicion(preguntas: Pregunta[]): ErrorDefinicion[] {
+  const errores: ErrorDefinicion[] = [];
   const idsVistos = new Set<string>();
 
   preguntas.forEach((pregunta, indice) => {
-    const posicion = `Pregunta ${indice + 1}`;
-
-    if (idsVistos.has(pregunta.id)) errores.push(`${posicion}: el id "${pregunta.id}" está repetido`);
+    if (idsVistos.has(pregunta.id)) errores.push({ indice, campo: 'id', mensaje: `El id "${pregunta.id}" está repetido` });
     idsVistos.add(pregunta.id);
 
     if (pregunta.tipo === 'opcion_unica' || pregunta.tipo === 'opcion_multiple') {
-      if (pregunta.opciones.length < 2) errores.push(`${posicion}: necesita al menos 2 opciones`);
+      if (pregunta.opciones.length < 2) errores.push({ indice, campo: 'opciones', mensaje: 'Necesita al menos 2 opciones' });
       const normalizadas = pregunta.opciones.map((o) => o.trim().toLowerCase());
-      if (new Set(normalizadas).size !== normalizadas.length) errores.push(`${posicion}: tiene opciones repetidas`);
+      if (new Set(normalizadas).size !== normalizadas.length) {
+        errores.push({ indice, campo: 'opciones', mensaje: 'Tiene opciones repetidas' });
+      }
     }
 
     if (pregunta.tipo === 'escala' && pregunta.minimo >= pregunta.maximo) {
-      errores.push(`${posicion}: el mínimo de la escala debe ser menor que el máximo`);
+      errores.push({ indice, campo: 'minimo', mensaje: 'El mínimo de la escala debe ser menor que el máximo' });
     }
   });
 
   return errores;
+}
+
+/** Los mismos errores como texto ("Pregunta 2: tiene opciones repetidas"), para los mensajes de la API. */
+export function validarDefinicion(preguntas: Pregunta[]): string[] {
+  return erroresDeDefinicion(preguntas).map(
+    ({ indice, mensaje }) => `Pregunta ${indice + 1}: ${mensaje.charAt(0).toLowerCase()}${mensaje.slice(1)}`,
+  );
 }
 
 /**

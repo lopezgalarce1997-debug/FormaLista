@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   crearSlug,
   decidirEdicion,
+  erroresDeDefinicion,
   preguntasDeVersion,
   validarCambioDeTipos,
   validarDefinicion,
@@ -185,5 +186,28 @@ describe('Versionado: preguntasDeVersion', () => {
 
   it('devuelve null si la versión no existe', () => {
     expect(preguntasDeVersion(versiones, 3)).toBeNull();
+  });
+});
+
+describe('erroresDeDefinicion (errores ubicados, para la web)', () => {
+  it('indica la pregunta y el campo de cada error', () => {
+    const errores = erroresDeDefinicion([
+      texto('p1'),
+      { id: 'p2', tipo: 'opcion_unica', texto: 'x', obligatoria: false, opciones: ['Sí', 'sí'] },
+      { id: 'p3', tipo: 'escala', texto: 'x', obligatoria: false, minimo: 5, maximo: 5 },
+      texto('p1'),
+    ]);
+
+    expect(errores).toEqual([
+      { indice: 1, campo: 'opciones', mensaje: 'Tiene opciones repetidas' },
+      { indice: 2, campo: 'minimo', mensaje: 'El mínimo de la escala debe ser menor que el máximo' },
+      { indice: 3, campo: 'id', mensaje: 'El id "p1" está repetido' },
+    ]);
+  });
+
+  it('validarDefinicion conserva exactamente los textos de antes (la API no cambia)', () => {
+    const preguntas: Pregunta[] = [{ id: 'p1', tipo: 'opcion_multiple', texto: 'x', obligatoria: false, opciones: ['A'] }];
+
+    expect(validarDefinicion(preguntas)).toEqual(['Pregunta 1: necesita al menos 2 opciones']);
   });
 });
