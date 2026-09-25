@@ -34,9 +34,9 @@ jobs:
       matrix:
         node: [22, 24] # "engines": ">=22" en package.json
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
           cache: npm # cachea ~/.npm según package-lock.json
@@ -87,15 +87,15 @@ jobs:
       MONGOMS_DOWNLOAD_DIR: ${{ github.workspace }}/.cache/mongodb-binaries
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
 
       - name: Caché del binario de MongoDB
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .cache/mongodb-binaries
           key: mongodb-8.2.6-ubuntu-24.04
