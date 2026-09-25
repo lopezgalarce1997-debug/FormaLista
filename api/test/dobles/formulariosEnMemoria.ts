@@ -1,6 +1,8 @@
 import type {
+  ConsultaEstadisticas,
   ContenidoFormulario,
   ControlEdicion,
+  FiltroRespuestas,
   NuevaRespuesta,
   RegistroFormulario,
   RepositorioFormularios,
@@ -8,6 +10,7 @@ import type {
   RepositorioRespuestas,
   RespuestaGuardada,
 } from '../../src/application/puertos.js';
+import type { AgregadosCrudos } from '../../src/domain/estadisticas.js';
 import type { EstadoFormulario, Formulario, VersionFormulario } from '../../src/domain/formulario.js';
 
 /** Permite simular que una base de datos falla en un método concreto: `repo.fallarEn('crear')`. */
@@ -161,6 +164,39 @@ export class RespuestasEnMemoria
     const guardada = { ...datos, id: `r${this.siguienteId++}`, enviadaEn: new Date() };
     this.guardadas.push(guardada);
     return guardada;
+  }
+
+  /**
+   * La agregación real se prueba contra MongoDB (test/integracion). Aquí se devuelven agregados
+   * preparados por cada prueba y se guarda la consulta recibida para verificarla.
+   */
+  crudosSimulados: AgregadosCrudos = {
+    total: 0,
+    porVersion: [],
+    porDia: [],
+    respondidas: [],
+    conteos: [],
+    escalas: [],
+    fechas: [],
+    textos: [],
+  };
+  ultimaConsulta: ConsultaEstadisticas | null = null;
+
+  async agregarEstadisticas(consulta: ConsultaEstadisticas): Promise<AgregadosCrudos> {
+    this.revisarFalla('agregarEstadisticas');
+    this.ultimaConsulta = consulta;
+    return this.crudosSimulados;
+  }
+
+  async listar(
+    filtro: FiltroRespuestas,
+    pagina: { saltar: number; limite: number },
+  ): Promise<{ total: number; respuestas: RespuestaGuardada[] }> {
+    this.revisarFalla('listar');
+    const filtradas = this.guardadas
+      .filter((r) => r.formularioId === filtro.formularioId && (filtro.version === undefined || r.version === filtro.version))
+      .sort((a, b) => b.enviadaEn.getTime() - a.enviadaEn.getTime() || b.id.localeCompare(a.id));
+    return { total: filtradas.length, respuestas: filtradas.slice(pagina.saltar, pagina.saltar + pagina.limite) };
   }
 
   async eliminarPorFormulario(formularioId: string): Promise<number> {

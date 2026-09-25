@@ -1,5 +1,6 @@
 // Interfaces que la capa de aplicación necesita y que infrastructure implementa
 // (como las interfaces IRepository de la capa Application en Clean Architecture .NET).
+import type { AgregadosCrudos } from '../domain/estadisticas.js';
 import type { EstadoFormulario, Formulario, Pregunta, VersionFormulario } from '../domain/formulario.js';
 import type { RespuestaValidada } from '../domain/respuesta.js';
 import type { Usuario } from '../domain/usuario.js';
@@ -93,8 +94,31 @@ export interface RespuestaGuardada extends NuevaRespuesta {
   enviadaEn: Date;
 }
 
+export interface FiltroRespuestas {
+  formularioId: string;
+  /** Sin versión = todas. */
+  version?: number;
+}
+
+export interface ConsultaEstadisticas extends FiltroRespuestas {
+  /** Zona horaria IANA para agrupar por día (p. ej. America/Santiago). */
+  zona: string;
+  /** Ids de pregunta por tipo: las respuestas no guardan el tipo, lo aporta la definición. */
+  /** Preguntas cuyas respuestas se cuentan por valor: opciones (única y múltiple) y escalas. */
+  idsConteo: string[];
+  idsEscala: string[];
+  idsFecha: string[];
+  idsTexto: string[];
+}
+
 export interface RepositorioRespuestas {
   crear(datos: NuevaRespuesta): Promise<RespuestaGuardada>;
+  agregarEstadisticas(consulta: ConsultaEstadisticas): Promise<AgregadosCrudos>;
+  /** Más recientes primero. */
+  listar(filtro: FiltroRespuestas, pagina: { saltar: number; limite: number }): Promise<{
+    total: number;
+    respuestas: RespuestaGuardada[];
+  }>;
   /** Devuelve cuántas respuestas se eliminaron. */
   eliminarPorFormulario(formularioId: string): Promise<number>;
   /** Ids (distintos) de los formularios que tienen al menos una respuesta. */

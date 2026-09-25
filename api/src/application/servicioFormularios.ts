@@ -11,6 +11,7 @@ import {
   type Formulario,
   type Pregunta,
 } from '../domain/formulario.js';
+import { formularioNoEncontrado, registroAccesible } from './acceso.js';
 import { ErrorAplicacion } from './errores.js';
 import type {
   ContenidoFormulario,
@@ -204,12 +205,8 @@ export class ServicioFormularios {
     }
   }
 
-  /** Por ahora solo el propietario tiene acceso (los roles de equipo llegan en el paso 10). */
-  private async registroPropio(usuarioId: number, id: string): Promise<RegistroFormulario> {
-    const registro = await this.registro.buscar(id);
-    // 404 y no 403: no se revela que existe un formulario ajeno con ese id.
-    if (!registro || registro.propietarioId !== usuarioId) throw formularioNoEncontrado();
-    return registro;
+  private registroPropio(usuarioId: number, id: string): Promise<RegistroFormulario> {
+    return registroAccesible(this.registro, usuarioId, id);
   }
 
   private conEstado(formulario: Formulario | null, registro: RegistroFormulario): FormularioConEstado {
@@ -233,10 +230,6 @@ function modificadoPorOtro(): ErrorAplicacion {
     'conflicto',
     'El formulario fue modificado por otra persona; recarga para ver la última versión',
   );
-}
-
-function formularioNoEncontrado(): ErrorAplicacion {
-  return new ErrorAplicacion('no_encontrado', 'Formulario no encontrado');
 }
 
 /** 8 caracteres en base 36 (~2,8 billones de combinaciones). El índice único de Mongo garantiza que no se repita. */
