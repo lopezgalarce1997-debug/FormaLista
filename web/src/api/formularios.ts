@@ -22,6 +22,11 @@ export const apiFormularios = {
   /** El cuerpo lleva la `version` que se estaba editando: si ya no es la vigente, la API responde 409. */
   actualizar: (id: string, cuerpo: CuerpoActualizacion) =>
     pedir<Detalle>(`/formularios/${encodeURIComponent(id)}`, { metodo: 'PUT', cuerpo }),
+  publicar: (id: string) => pedir<Detalle>(`/formularios/${encodeURIComponent(id)}/publicar`, { metodo: 'POST' }),
+  cerrar: (id: string) => pedir<Detalle>(`/formularios/${encodeURIComponent(id)}/cerrar`, { metodo: 'POST' }),
+  /** equipoId null = dejar de compartir. */
+  compartir: (id: string, equipoId: number | null) =>
+    pedir<Detalle>(`/formularios/${encodeURIComponent(id)}/compartir`, { metodo: 'POST', cuerpo: { equipoId } }),
 };
 
 /** El link que se comparte para responder (la página pública llega en la pantalla 4). */

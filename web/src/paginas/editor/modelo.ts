@@ -86,6 +86,16 @@ export function aCuerpoApi(valores: FormularioEditable, version: number): Cuerpo
 }
 
 /**
+ * Las preguntas del editor como Pregunta del dominio, para la vista previa (aún sin guardar):
+ * las nuevas reciben un id temporal.
+ */
+export function aPreguntasVista(valores: FormularioEditable): Pregunta[] {
+  return (aCuerpoApi(valores, 1).preguntas ?? []).map(
+    (p, i) => ({ obligatoria: false, ...p, id: p.id ?? `nueva-${i}` }) as Pregunta,
+  );
+}
+
+/**
  * Ruta de un error de la API/Zod (sobre el cuerpo de la API) → ruta del campo en el formulario.
  * Ej.: preguntas.2.opciones.1 → preguntas.2.opciones.1.texto (las opciones son objetos aquí).
  */

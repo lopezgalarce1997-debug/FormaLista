@@ -8,8 +8,18 @@ import { Dialogo } from '../../componentes/Dialogo';
 import { InsigniaEstado } from '../../componentes/insignias';
 import { NOMBRE_TIPO, TIPOS } from '../../componentes/tiposPregunta';
 import { Alerta, Boton, Campo } from '../../componentes/ui';
-import { aCuerpoApi, aEditable, preguntaNueva, resolverEditor, rutaEnFormulario, type FormularioEditable } from './modelo';
+import { AccionesFormulario } from './AccionesFormulario';
+import {
+  aCuerpoApi,
+  aEditable,
+  aPreguntasVista,
+  preguntaNueva,
+  resolverEditor,
+  rutaEnFormulario,
+  type FormularioEditable,
+} from './modelo';
 import { TarjetaPregunta } from './TarjetaPregunta';
+import { VistaPrevia } from './VistaPrevia';
 
 /**
  * Editor de un formulario. Guardado MANUAL: en un formulario publicado, cada guardado que cambia
@@ -22,6 +32,7 @@ export function Editor({ detalle }: { detalle: Detalle }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const [conflicto, setConflicto] = useState(false);
   const [enfocar, setEnfocar] = useState<{ clave: string; direccion: 'subir' | 'bajar' } | null>(null);
+  const [pestana, setPestana] = useState<Pestana>('editar');
 
   const formulario = useForm<FormularioEditable>({ defaultValues: aEditable(detalle), resolver: resolverEditor });
   const { register, handleSubmit, reset, setError, formState, control } = formulario;
@@ -95,14 +106,7 @@ export function Editor({ detalle }: { detalle: Detalle }) {
 
   return (
     <FormProvider {...formulario}>
-      <form
-        onSubmit={handleSubmit((valores) => {
-          setAviso(null);
-          guardar.mutate(valores);
-        })}
-        noValidate
-        className="space-y-6"
-      >
+      <div className="space-y-6">
         <div className="space-y-2">
           <Link to="/formularios" className="text-sm text-indigo-600 hover:underline">
             ← Mis formularios
@@ -111,13 +115,20 @@ export function Editor({ detalle }: { detalle: Detalle }) {
             <h1 className="text-2xl font-semibold">{detalle.titulo}</h1>
             <InsigniaEstado estado={detalle.estado} />
             <span className="text-sm text-slate-500">versión {version}</span>
+            {detalle.equipo && <span className="text-sm text-slate-500">· Compartido con {detalle.equipo.nombre}</span>}
             <div className="ml-auto flex items-center gap-3">
               {formState.isDirty && <span className="text-sm text-amber-700">Cambios sin guardar</span>}
-              <Boton type="submit" disabled={!formState.isDirty || guardar.isPending}>
+              {/* form=: el botón está fuera del <form> pero lo envía igual. */}
+              <Boton type="submit" form={ID_FORMULARIO} disabled={!formState.isDirty || guardar.isPending}>
                 {guardar.isPending ? 'Guardando…' : 'Guardar'}
               </Boton>
             </div>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <Pestanas activa={pestana} alCambiar={setPestana} />
+          <AccionesFormulario detalle={detalle} hayCambios={formState.isDirty} />
         </div>
 
         {aviso && <Alerta tipo="info">{aviso}</Alerta>}
@@ -129,44 +140,73 @@ export function Editor({ detalle }: { detalle: Detalle }) {
           </Alerta>
         )}
 
-        <div className="grid gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <Campo id="titulo" etiqueta="Título" error={formState.errors.titulo?.message} {...register('titulo')} />
-          <Campo id="descripcion" etiqueta="Descripción (opcional)" error={formState.errors.descripcion?.message} {...register('descripcion')} />
-        </div>
-
-        <section aria-label="Preguntas" className="space-y-4">
-          {fields.length === 0 && <p className="text-sm text-slate-500">Aún no hay preguntas. Agrega la primera:</p>}
-          {fields.map((campo, i) => (
-            <TarjetaPregunta
-              key={campo.clave}
-              clave={campo.clave}
-              indice={i}
-              total={fields.length}
-              tipoBloqueado={publicado && Boolean(campo.id)}
-              alSubir={() => mover(i, i - 1, 'subir')}
-              alBajar={() => mover(i, i + 1, 'bajar')}
-              alEliminar={() => remove(i)}
-            />
-          ))}
-          {formState.errors.preguntas?.root && <Alerta>{formState.errors.preguntas.root.message}</Alerta>}
-        </section>
-
-        <div className="rounded-xl border-2 border-dashed border-slate-300 p-4">
-          <p className="text-sm font-medium text-slate-700">Agregar pregunta</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {TIPOS.map((tipo) => (
-              <Boton
-                key={tipo}
-                variante="secundario"
-                tamano="chico"
-                onClick={() => append(preguntaNueva(tipo), { focusName: `preguntas.${fields.length}.texto` })}
-              >
-                + {NOMBRE_TIPO[tipo]}
-              </Boton>
-            ))}
+        {/* El editor se oculta (no se desmonta) en la vista previa: así no se pierde nada de lo escrito. */}
+        <form
+          id={ID_FORMULARIO}
+          role="tabpanel"
+          aria-labelledby="pestana-editar"
+          hidden={pestana !== 'editar'}
+          onSubmit={handleSubmit(
+            (valores) => {
+              setAviso(null);
+              guardar.mutate(valores);
+            },
+            // Si hay errores y se guardó desde la vista previa, se vuelve al editor para mostrarlos.
+            () => setPestana('editar'),
+          )}
+          noValidate
+          className="space-y-6"
+        >
+          <div className="grid gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <Campo id="titulo" etiqueta="Título" error={formState.errors.titulo?.message} {...register('titulo')} />
+            <Campo id="descripcion" etiqueta="Descripción (opcional)" error={formState.errors.descripcion?.message} {...register('descripcion')} />
           </div>
-        </div>
-      </form>
+  
+          <section aria-label="Preguntas" className="space-y-4">
+            {fields.length === 0 && <p className="text-sm text-slate-500">Aún no hay preguntas. Agrega la primera:</p>}
+            {fields.map((campo, i) => (
+              <TarjetaPregunta
+                key={campo.clave}
+                clave={campo.clave}
+                indice={i}
+                total={fields.length}
+                tipoBloqueado={publicado && Boolean(campo.id)}
+                alSubir={() => mover(i, i - 1, 'subir')}
+                alBajar={() => mover(i, i + 1, 'bajar')}
+                alEliminar={() => remove(i)}
+              />
+            ))}
+            {formState.errors.preguntas?.root && <Alerta>{formState.errors.preguntas.root.message}</Alerta>}
+          </section>
+  
+          <div className="rounded-xl border-2 border-dashed border-slate-300 p-4">
+            <p className="text-sm font-medium text-slate-700">Agregar pregunta</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {TIPOS.map((tipo) => (
+                <Boton
+                  key={tipo}
+                  variante="secundario"
+                  tamano="chico"
+                  onClick={() => append(preguntaNueva(tipo), { focusName: `preguntas.${fields.length}.texto` })}
+                >
+                  + {NOMBRE_TIPO[tipo]}
+                </Boton>
+              ))}
+            </div>
+          </div>
+        </form>
+
+        {/* Fuera del <form>: un Enter en un campo de la vista previa no debe guardar el formulario. */}
+        {pestana === 'vista' && (
+          <div role="tabpanel" aria-labelledby="pestana-vista">
+            <VistaPrevia
+              titulo={formulario.getValues('titulo')}
+              descripcion={formulario.getValues('descripcion')}
+              preguntas={aPreguntasVista(formulario.getValues())}
+            />
+          </div>
+        )}
+      </div>
 
       <Dialogo abierto={conflicto} alCerrar={() => setConflicto(false)} titulo="Otra persona modificó este formulario">
         <p className="text-sm text-slate-600">
@@ -193,6 +233,47 @@ export function Editor({ detalle }: { detalle: Detalle }) {
         </div>
       </Dialogo>
     </FormProvider>
+  );
+}
+
+const ID_FORMULARIO = 'formulario-editor';
+
+type Pestana = 'editar' | 'vista';
+
+/**
+ * Pestañas con el patrón accesible de WAI-ARIA: role tablist/tab/tabpanel, aria-selected, y
+ * flechas ← → para cambiar de pestaña (con Tab se sale del grupo, no se recorre cada pestaña).
+ */
+function Pestanas({ activa, alCambiar }: { activa: Pestana; alCambiar: (p: Pestana) => void }) {
+  const pestanas: { valor: Pestana; texto: string }[] = [
+    { valor: 'editar', texto: 'Editar' },
+    { valor: 'vista', texto: 'Vista previa' },
+  ];
+  const alTeclear = (evento: React.KeyboardEvent) => {
+    if (evento.key !== 'ArrowRight' && evento.key !== 'ArrowLeft') return;
+    const siguiente = activa === 'editar' ? 'vista' : 'editar';
+    alCambiar(siguiente);
+    document.getElementById(`pestana-${siguiente}`)?.focus();
+  };
+  return (
+    <div role="tablist" aria-label="Modo" className="inline-flex rounded-lg bg-slate-100 p-1" onKeyDown={alTeclear}>
+      {pestanas.map(({ valor, texto }) => (
+        <button
+          key={valor}
+          id={`pestana-${valor}`}
+          type="button"
+          role="tab"
+          aria-selected={activa === valor}
+          tabIndex={activa === valor ? 0 : -1}
+          onClick={() => alCambiar(valor)}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+            activa === valor ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          {texto}
+        </button>
+      ))}
+    </div>
   );
 }
 
