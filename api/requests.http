@@ -130,6 +130,20 @@ Content-Type: application/json
   }
 }
 
+# ============================ Resultados ============================
+
+### Estadísticas combinando todas las versiones (zona por defecto: America/Santiago)
+GET {{baseUrl}}/formularios/{{formulario.response.body.id}}/resultados
+Authorization: Bearer {{login.response.body.token}}
+
+### Estadísticas de una sola versión y agrupando días en UTC
+GET {{baseUrl}}/formularios/{{formulario.response.body.id}}/resultados?version=1&zona=UTC
+Authorization: Bearer {{login.response.body.token}}
+
+### Listado paginado de respuestas (más recientes primero; tamano máx. 100)
+GET {{baseUrl}}/formularios/{{formulario.response.body.id}}/respuestas?pagina=1&tamano=20
+Authorization: Bearer {{login.response.body.token}}
+
 ### Cerrar (después, el link público responde 410)
 POST {{baseUrl}}/formularios/{{formulario.response.body.id}}/cerrar
 Authorization: Bearer {{login.response.body.token}}
