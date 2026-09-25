@@ -1,5 +1,6 @@
 import type {
   ContenidoFormulario,
+  ControlEdicion,
   NuevaRespuesta,
   RegistroFormulario,
   RepositorioFormularios,
@@ -7,7 +8,7 @@ import type {
   RepositorioRespuestas,
   RespuestaGuardada,
 } from '../../src/application/puertos.js';
-import type { EstadoFormulario, Formulario } from '../../src/domain/formulario.js';
+import type { EstadoFormulario, Formulario, VersionFormulario } from '../../src/domain/formulario.js';
 
 /** Permite simular que una base de datos falla en un método concreto: `repo.fallarEn('crear')`. */
 class ConFallasSimuladas<M extends string> {
@@ -70,6 +71,8 @@ export class FormulariosEnMemoria
   implements RepositorioFormularios
 {
   readonly documentos = new Map<string, Formulario>();
+  /** Versiones anteriores de cada formulario (el campo `versiones` del documento en Mongo). */
+  readonly historial = new Map<string, VersionFormulario[]>();
   private siguienteId = 1;
 
   async crear(datos: ContenidoFormulario & { slug: string }, creadoEn = new Date()): Promise<Formulario> {
@@ -95,13 +98,32 @@ export class FormulariosEnMemoria
     return ids.flatMap((id) => this.documentos.get(id) ?? []);
   }
 
-  async actualizar(id: string, datos: ContenidoFormulario): Promise<Formulario | null> {
+  async actualizar(id: string, datos: ContenidoFormulario, control: ControlEdicion): Promise<Formulario | null> {
     this.revisarFalla('actualizar');
     const actual = this.documentos.get(id);
-    if (!actual) return null;
-    const actualizado = { ...actual, ...datos, actualizadoEn: new Date() };
+    // Igual que el filtro { _id, version } de Mongo: si la versión no coincide, no actualiza.
+    if (!actual || actual.version !== control.versionEsperada) return null;
+
+    let version = actual.version;
+    if (control.archivar) {
+      const historial = this.historial.get(id) ?? [];
+      historial.push({ version: actual.version, preguntas: control.archivar, reemplazadaEn: new Date() });
+      this.historial.set(id, historial);
+      version++;
+    }
+    const actualizado = { ...actual, ...datos, version, actualizadoEn: new Date() };
     this.documentos.set(id, actualizado);
     return actualizado;
+  }
+
+  async obtenerVersiones(id: string): Promise<VersionFormulario[] | null> {
+    this.revisarFalla('obtenerVersiones');
+    const actual = this.documentos.get(id);
+    if (!actual) return null;
+    return [
+      ...(this.historial.get(id) ?? []),
+      { version: actual.version, preguntas: actual.preguntas, reemplazadaEn: null },
+    ];
   }
 
   async eliminar(id: string): Promise<void> {

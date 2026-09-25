@@ -116,16 +116,24 @@ describe('ServicioFormularios: lectura y edición', () => {
     const deAna = await servicio.crear(ANA, datos);
 
     await expect(servicio.obtener(BETO, deAna.id)).rejects.toMatchObject({ tipo: 'no_encontrado' });
-    await expect(servicio.actualizar(BETO, deAna.id, datos)).rejects.toMatchObject({ tipo: 'no_encontrado' });
+    await expect(servicio.actualizar(BETO, deAna.id, { ...datos, version: 1 })).rejects.toMatchObject({
+      tipo: 'no_encontrado',
+    });
   });
 
   it('actualiza título y preguntas conservando el slug', async () => {
     const { servicio } = crearEscenario();
     const creado = await servicio.crear(ANA, datos);
 
-    const editado = await servicio.actualizar(ANA, creado.id, { ...datos, titulo: 'Nuevo título', preguntas: [] });
+    const editado = await servicio.actualizar(ANA, creado.id, {
+      ...datos,
+      titulo: 'Nuevo título',
+      preguntas: [],
+      version: 1,
+    });
 
-    expect(editado).toMatchObject({ titulo: 'Nuevo título', preguntas: [], slug: creado.slug, estado: 'borrador' });
+    // En borrador se edita en el lugar: la versión no sube.
+    expect(editado).toMatchObject({ titulo: 'Nuevo título', preguntas: [], slug: creado.slug, estado: 'borrador', version: 1 });
   });
 });
 

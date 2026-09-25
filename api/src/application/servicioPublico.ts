@@ -1,4 +1,4 @@
-import type { Formulario, Pregunta } from '../domain/formulario.js';
+import { preguntasDeVersion, type Formulario, type Pregunta } from '../domain/formulario.js';
 import { validarRespuestas, type EntradaRespuestas } from '../domain/respuesta.js';
 import { ErrorAplicacion } from './errores.js';
 import type { RepositorioFormularios, RepositorioRegistroFormularios, RepositorioRespuestas } from './puertos.js';
@@ -30,10 +30,17 @@ export class ServicioPublico {
     return { slug: s, titulo, descripcion, version, preguntas };
   }
 
-  async responder(slug: string, entrada: EntradaRespuestas): Promise<ConfirmacionRespuesta> {
+  /**
+   * @param version versión que vio quien responde. Si el formulario se editó mientras respondía,
+   * se acepta igual y se valida contra ESA versión (sus preguntas siguen en el historial).
+   * Si no se indica, se usa la vigente.
+   */
+  async responder(slug: string, entrada: EntradaRespuestas, version?: number): Promise<ConfirmacionRespuesta> {
     const formulario = await this.buscarPublicado(slug);
+    const versionRespondida = version ?? formulario.version;
+    const preguntas = await this.preguntasDeVersion(formulario, versionRespondida);
 
-    const resultado = validarRespuestas(formulario.preguntas, entrada);
+    const resultado = validarRespuestas(preguntas, entrada);
     if (!resultado.valida) {
       throw new ErrorAplicacion(
         'validacion',
@@ -43,13 +50,26 @@ export class ServicioPublico {
     }
 
     // Se guarda la versión respondida: si el formulario se edita después, esta respuesta
-    // se sigue interpretando con sus preguntas originales (paso 8).
+    // se sigue interpretando con sus preguntas originales.
     const { id, enviadaEn } = await this.respuestas.crear({
       formularioId: formulario.id,
-      version: formulario.version,
+      version: versionRespondida,
       respuestas: resultado.respuestas,
     });
     return { id, enviadaEn };
+  }
+
+  private async preguntasDeVersion(formulario: Formulario, version: number): Promise<Pregunta[]> {
+    // Caso común: la vigente ya viene en el documento, sin leer el historial.
+    if (version === formulario.version) return formulario.preguntas;
+
+    const preguntas = preguntasDeVersion((await this.formularios.obtenerVersiones(formulario.id)) ?? [], version);
+    if (!preguntas) {
+      throw new ErrorAplicacion('validacion', 'La versión del formulario no existe', [
+        { campo: 'version', mensaje: `No existe la versión ${version}` },
+      ]);
+    }
+    return preguntas;
   }
 
   /**

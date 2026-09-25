@@ -13,6 +13,12 @@ export interface DocPregunta {
   maximo?: number;
 }
 
+export interface DocVersion {
+  version: number;
+  preguntas: DocPregunta[];
+  reemplazadaEn: Date;
+}
+
 export interface DocFormulario {
   _id: Types.ObjectId;
   titulo: string;
@@ -20,6 +26,8 @@ export interface DocFormulario {
   slug: string;
   version: number;
   preguntas: DocPregunta[];
+  /** Historial: solo las versiones ANTERIORES a la vigente. */
+  versiones: DocVersion[];
   creadoEn: Date;
   actualizadoEn: Date;
 }
@@ -49,6 +57,15 @@ const esquemaPregunta = new Schema<DocPregunta>(
   { _id: false },
 );
 
+const esquemaVersion = new Schema<DocVersion>(
+  {
+    version: { type: Number, required: true },
+    preguntas: { type: [esquemaPregunta], default: [] },
+    reemplazadaEn: { type: Date, required: true },
+  },
+  { _id: false },
+);
+
 const esquemaFormulario = new Schema<DocFormulario>(
   {
     titulo: { type: String, required: true },
@@ -56,6 +73,7 @@ const esquemaFormulario = new Schema<DocFormulario>(
     slug: { type: String, required: true, unique: true },
     version: { type: Number, default: 1 },
     preguntas: { type: [esquemaPregunta], default: [] },
+    versiones: { type: [esquemaVersion], default: [] },
   },
   {
     collection: 'formularios',

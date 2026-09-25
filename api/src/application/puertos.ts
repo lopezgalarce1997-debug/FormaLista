@@ -1,6 +1,6 @@
 // Interfaces que la capa de aplicación necesita y que infrastructure implementa
 // (como las interfaces IRepository de la capa Application en Clean Architecture .NET).
-import type { EstadoFormulario, Formulario, Pregunta } from '../domain/formulario.js';
+import type { EstadoFormulario, Formulario, Pregunta, VersionFormulario } from '../domain/formulario.js';
 import type { RespuestaValidada } from '../domain/respuesta.js';
 import type { Usuario } from '../domain/usuario.js';
 
@@ -60,13 +60,23 @@ export interface ContenidoFormulario {
   preguntas: Pregunta[];
 }
 
+export interface ControlEdicion {
+  /** Solo se actualiza si la versión guardada sigue siendo esta (concurrencia optimista). */
+  versionEsperada: number;
+  /** Si viene, se guardan estas preguntas en el historial como versionEsperada y la versión sube en 1. */
+  archivar: Pregunta[] | null;
+}
+
+/** Las lecturas NO incluyen el historial de versiones; para eso está obtenerVersiones. */
 export interface RepositorioFormularios {
   crear(datos: ContenidoFormulario & { slug: string }): Promise<Formulario>;
   buscarPorId(id: string): Promise<Formulario | null>;
   buscarPorSlug(slug: string): Promise<Formulario | null>;
   buscarPorIds(ids: string[]): Promise<Formulario[]>;
-  /** Devuelve null si el documento no existe. */
-  actualizar(id: string, datos: ContenidoFormulario): Promise<Formulario | null>;
+  /** Devuelve null si el documento no existe o si su versión ya no es la esperada. */
+  actualizar(id: string, datos: ContenidoFormulario, control: ControlEdicion): Promise<Formulario | null>;
+  /** Todas las versiones (las del historial y la vigente), o null si el formulario no existe. */
+  obtenerVersiones(id: string): Promise<VersionFormulario[] | null>;
   eliminar(id: string): Promise<void>;
   listarIdsCreadosAntesDe(fecha: Date): Promise<string[]>;
 }

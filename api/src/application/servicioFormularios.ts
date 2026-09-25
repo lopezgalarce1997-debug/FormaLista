@@ -1,7 +1,9 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import {
   crearSlug,
+  decidirEdicion,
   TRANSICIONES,
+  validarCambioDeTipos,
   validarDefinicion,
   validarTransicion,
   type AccionEstado,
@@ -27,6 +29,11 @@ export interface DatosFormulario {
   titulo: string;
   descripcion: string;
   preguntas: PreguntaEntrada[];
+}
+
+export interface DatosActualizacion extends DatosFormulario {
+  /** Versión que el cliente estaba editando: si ya no es la vigente, se rechaza (409). */
+  version: number;
 }
 
 export type FormularioConEstado = Formulario & { estado: EstadoFormulario };
@@ -105,10 +112,32 @@ export class ServicioFormularios {
     return this.conEstado(formulario, registro);
   }
 
-  async actualizar(usuarioId: number, id: string, datos: DatosFormulario): Promise<FormularioConEstado> {
+  /**
+   * Edita con concurrencia optimista y versionado:
+   * - Si el cliente editaba una versión que ya no es la vigente → 409 (evita pisar cambios ajenos).
+   * - En un formulario ya publicado, cambiar preguntas crea una versión nueva y archiva la anterior,
+   *   para que las respuestas antiguas se sigan interpretando con sus preguntas originales.
+   */
+  async actualizar(usuarioId: number, id: string, datos: DatosActualizacion): Promise<FormularioConEstado> {
     const registro = await this.registroPropio(usuarioId, id);
-    const formulario = await this.formularios.actualizar(id, prepararContenido(datos));
-    return this.conEstado(formulario, registro);
+    const actual = this.conEstado(await this.formularios.buscarPorId(id), registro);
+    if (datos.version !== actual.version) throw modificadoPorOtro();
+
+    const contenido = prepararContenido(datos);
+    if (registro.estado !== 'borrador') {
+      const errores = validarCambioDeTipos(actual.preguntas, contenido.preguntas);
+      if (errores.length > 0) throw new ErrorAplicacion('validacion', errores.join('. '));
+    }
+
+    const modo = decidirEdicion(registro.estado, actual.preguntas, contenido.preguntas);
+    const actualizado = await this.formularios.actualizar(id, contenido, {
+      versionEsperada: actual.version,
+      archivar: modo === 'nueva_version' ? actual.preguntas : null,
+    });
+    // null: otra edición cambió la versión entre la lectura y la escritura.
+    if (!actualizado) throw modificadoPorOtro();
+
+    return { ...actualizado, estado: registro.estado };
   }
 
   async eliminar(usuarioId: number, id: string): Promise<void> {
@@ -197,6 +226,13 @@ function prepararContenido(datos: DatosFormulario): ContenidoFormulario {
   const errores = validarDefinicion(preguntas);
   if (errores.length > 0) throw new ErrorAplicacion('validacion', errores.join('. '));
   return { titulo: datos.titulo, descripcion: datos.descripcion, preguntas };
+}
+
+function modificadoPorOtro(): ErrorAplicacion {
+  return new ErrorAplicacion(
+    'conflicto',
+    'El formulario fue modificado por otra persona; recarga para ver la última versión',
+  );
 }
 
 function formularioNoEncontrado(): ErrorAplicacion {
