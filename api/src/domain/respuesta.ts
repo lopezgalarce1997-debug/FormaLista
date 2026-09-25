@@ -119,8 +119,36 @@ function validarEscala(pregunta: PreguntaEscala, valor: unknown): ResultadoValor
   return ok(valor);
 }
 
-function validarOpcionMultiple(_pregunta: PreguntaOpciones, _valor: unknown): ResultadoValor {
-  throw new Error('Pendiente: validación de opción múltiple (la escribe Bladimir)');
+function validarOpcionMultiple(pregunta: PreguntaOpciones, valor: unknown): ResultadoValor {
+  if (!Array.isArray(valor)) return error('Debe ser una lista de opciones');
+  // El type guard (v is string) le dice a TypeScript que, si pasa, valor es string[].
+  if (!valor.every((v): v is string => typeof v === 'string')) return error('Cada opción debe ser un texto');
+
+  const elegidas = new Set<string>();
+  for (const texto of valor) {
+    const opcion = buscarOpcion(pregunta, texto);
+    if (opcion === undefined) return error(`Opción no válida: "${texto}"`);
+    if (elegidas.has(opcion)) return error(`Opción repetida: "${opcion}"`);
+    elegidas.add(opcion);
+  }
+
+  // Se guarda en el orden del formulario (no en el que llegó): así dos respuestas con las
+  // mismas opciones quedan idénticas, lo que simplifica mostrarlas y agregarlas en estadísticas.
+  return ok(pregunta.opciones.filter((opcion) => elegidas.has(opcion)));
+}
+
+/**
+ * Busca la opción del formulario que corresponde al texto recibido, sin distinguir mayúsculas
+ * ni espacios alrededor. Devuelve el texto EXACTO definido en el formulario (forma canónica).
+ * No hay ambigüedad: validarDefinicion ya impide opciones que solo difieran en eso.
+ */
+function buscarOpcion(pregunta: PreguntaOpciones, texto: string): string | undefined {
+  const clave = normalizarOpcion(texto);
+  return pregunta.opciones.find((opcion) => normalizarOpcion(opcion) === clave);
+}
+
+function normalizarOpcion(texto: string): string {
+  return texto.trim().toLowerCase();
 }
 
 function validarTexto(_pregunta: PreguntaTexto, _valor: unknown): ResultadoValor {

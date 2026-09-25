@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Pregunta, PreguntaEscala } from '../../src/domain/formulario.js';
+import type { Pregunta, PreguntaEscala, PreguntaOpciones } from '../../src/domain/formulario.js';
 import { validarRespuestas } from '../../src/domain/respuesta.js';
 
 const escala = (id: string, cambios: Partial<PreguntaEscala> = {}): PreguntaEscala => ({
@@ -9,6 +9,15 @@ const escala = (id: string, cambios: Partial<PreguntaEscala> = {}): PreguntaEsca
   obligatoria: false,
   minimo: 1,
   maximo: 5,
+  ...cambios,
+});
+
+const multiple = (id: string, cambios: Partial<PreguntaOpciones> = {}): PreguntaOpciones => ({
+  id,
+  tipo: 'opcion_multiple',
+  texto: `Pregunta ${id}`,
+  obligatoria: false,
+  opciones: ['Latte', 'Espresso', 'Capuccino'],
   ...cambios,
 });
 
@@ -120,5 +129,73 @@ describe('validarRespuestas: escala', () => {
       valida: false,
       errores: [{ preguntaId: 'p1', mensaje: 'Debe ser un número entero' }],
     });
+  });
+});
+
+describe('validarRespuestas: opción múltiple', () => {
+  const invalida = (mensaje: string) => ({ valida: false, errores: [{ preguntaId: 'p1', mensaje }] });
+
+  it('acepta varias opciones válidas', () => {
+    expect(validarUna(multiple('p1'), ['Latte', 'Capuccino'])).toEqual({
+      valida: true,
+      respuestas: [{ preguntaId: 'p1', valor: ['Latte', 'Capuccino'] }],
+    });
+  });
+
+  it('acepta una sola opción (sigue siendo una lista)', () => {
+    expect(validarUna(multiple('p1'), ['Espresso'])).toMatchObject({ respuestas: [{ valor: ['Espresso'] }] });
+  });
+
+  it('acepta todas las opciones', () => {
+    expect(validarUna(multiple('p1'), ['Latte', 'Espresso', 'Capuccino'])).toMatchObject({ valida: true });
+  });
+
+  it('devuelve las opciones en el orden del formulario, no en el que llegaron', () => {
+    expect(validarUna(multiple('p1'), ['Capuccino', 'Latte'])).toMatchObject({
+      respuestas: [{ valor: ['Latte', 'Capuccino'] }],
+    });
+  });
+
+  it('ignora mayúsculas y espacios, y guarda el texto exacto del formulario', () => {
+    expect(validarUna(multiple('p1'), [' latte ', 'CAPUCCINO'])).toMatchObject({
+      respuestas: [{ valor: ['Latte', 'Capuccino'] }],
+    });
+  });
+
+  it.each([
+    ['texto suelto', 'Latte'],
+    ['número', 1],
+    ['booleano', true],
+    ['objeto', { opcion: 'Latte' }],
+  ])('rechaza un valor que no es una lista (%s)', (_caso, valor) => {
+    expect(validarUna(multiple('p1'), valor)).toEqual(invalida('Debe ser una lista de opciones'));
+  });
+
+  it.each([
+    ['número', [1]],
+    ['null dentro', ['Latte', null]],
+    ['lista anidada', [['Latte']]],
+  ])('rechaza una lista con elementos que no son texto (%s)', (_caso, valor) => {
+    expect(validarUna(multiple('p1'), valor)).toEqual(invalida('Cada opción debe ser un texto'));
+  });
+
+  it('rechaza una opción que no existe en la pregunta', () => {
+    expect(validarUna(multiple('p1'), ['Latte', 'Mocca'])).toEqual(invalida('Opción no válida: "Mocca"'));
+  });
+
+  it('rechaza un texto vacío dentro de la lista', () => {
+    expect(validarUna(multiple('p1'), ['Latte', ''])).toEqual(invalida('Opción no válida: ""'));
+  });
+
+  it('rechaza opciones repetidas, también si solo difieren en mayúsculas o espacios', () => {
+    expect(validarUna(multiple('p1'), ['Latte', ' LATTE'])).toEqual(invalida('Opción repetida: "Latte"'));
+  });
+
+  it('una obligatoria con la lista vacía cuenta como sin responder', () => {
+    expect(validarUna(multiple('p1', { obligatoria: true }), [])).toEqual(invalida('Es obligatoria'));
+  });
+
+  it('una opcional con la lista vacía se omite del resultado', () => {
+    expect(validarUna(multiple('p1'), [])).toEqual({ valida: true, respuestas: [] });
   });
 });
