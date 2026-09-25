@@ -1,10 +1,14 @@
 // Composition root: único lugar donde se crean las dependencias reales y se conectan entre sí
 // (equivale a Program.cs + registro de servicios en ASP.NET Core).
 import mongoose from 'mongoose';
+import { ServicioAuth } from './application/servicioAuth.js';
 import { cargarArchivoEnv, cargarConfig } from './config/env.js';
 import { crearApp } from './http/app.js';
 import { conectarMongo, pingMongo } from './infrastructure/mongo/conexion.js';
 import { crearPoolMySql } from './infrastructure/mysql/pool.js';
+import { RepositorioUsuariosMySql } from './infrastructure/mysql/repositorioUsuariosMySql.js';
+import { HasheadorBcrypt } from './infrastructure/seguridad/hasheadorBcrypt.js';
+import { ServicioTokensJwt } from './infrastructure/seguridad/servicioTokensJwt.js';
 
 cargarArchivoEnv();
 const config = cargarConfig();
@@ -13,11 +17,16 @@ const pool = crearPoolMySql(config.mysql);
 await pool.query('SELECT 1'); // falla al arrancar si MySQL no está disponible
 const conexionMongo = await conectarMongo(config.mongoUri);
 
+const servicioTokens = new ServicioTokensJwt(config.jwt.secreto, config.jwt.expiraEn);
+const servicioAuth = new ServicioAuth(new RepositorioUsuariosMySql(pool), new HasheadorBcrypt(), servicioTokens);
+
 const app = crearApp({
   verificadoresSalud: [
     { nombre: 'mysql', verificar: async () => void (await pool.query('SELECT 1')) },
     { nombre: 'mongo', verificar: () => pingMongo(conexionMongo) },
   ],
+  servicioAuth,
+  servicioTokens,
 });
 
 const servidor = app.listen(config.puerto, () => {
