@@ -1,4 +1,5 @@
 import type {
+  AccesoFormulario,
   ConsultaEstadisticas,
   ContenidoFormulario,
   ControlEdicion,
@@ -12,6 +13,7 @@ import type {
 } from '../../src/application/puertos.js';
 import type { AgregadosCrudos } from '../../src/domain/estadisticas.js';
 import type { EstadoFormulario, Formulario, VersionFormulario } from '../../src/domain/formulario.js';
+import type { EquiposEnMemoria } from './equiposEnMemoria.js';
 
 /** Permite simular que una base de datos falla en un método concreto: `repo.fallarEn('crear')`. */
 class ConFallasSimuladas<M extends string> {
@@ -27,12 +29,19 @@ class ConFallasSimuladas<M extends string> {
   }
 }
 
-/** Doble de MySQL (formularios_registro). */
+/**
+ * Doble de MySQL (formularios_registro). Imita el JOIN con equipo_miembros consultando el doble
+ * de equipos (si se le pasa uno).
+ */
 export class RegistroEnMemoria
   extends ConFallasSimuladas<keyof RepositorioRegistroFormularios>
   implements RepositorioRegistroFormularios
 {
   readonly filas = new Map<string, RegistroFormulario>();
+
+  constructor(private readonly equipos?: EquiposEnMemoria) {
+    super();
+  }
 
   async crear(datos: { idMongo: string; propietarioId: number }): Promise<void> {
     this.revisarFalla('crear');
@@ -44,9 +53,32 @@ export class RegistroEnMemoria
     return this.filas.get(idMongo) ?? null;
   }
 
-  async listarPorPropietario(usuarioId: number): Promise<RegistroFormulario[]> {
-    this.revisarFalla('listarPorPropietario');
-    return [...this.filas.values()].filter((f) => f.propietarioId === usuarioId).reverse();
+  async buscarAcceso(idMongo: string, usuarioId: number): Promise<AccesoFormulario | null> {
+    this.revisarFalla('buscarAcceso');
+    const registro = this.filas.get(idMongo);
+    return registro ? this.accesoDe(registro, usuarioId) : null;
+  }
+
+  async listarAccesibles(usuarioId: number): Promise<AccesoFormulario[]> {
+    this.revisarFalla('listarAccesibles');
+    const accesos = await Promise.all([...this.filas.values()].map((r) => this.accesoDe(r, usuarioId)));
+    return accesos.filter((a) => a.esPropietario || a.rolEquipo !== null).reverse();
+  }
+
+  async asignarEquipo(idMongo: string, equipoId: number | null): Promise<void> {
+    this.revisarFalla('asignarEquipo');
+    const fila = this.filas.get(idMongo);
+    if (fila) fila.equipoId = equipoId;
+  }
+
+  private async accesoDe(registro: RegistroFormulario, usuarioId: number): Promise<AccesoFormulario> {
+    const { equipoId } = registro;
+    return {
+      registro: { ...registro },
+      esPropietario: registro.propietarioId === usuarioId,
+      rolEquipo: equipoId !== null ? ((await this.equipos?.rolDe(equipoId, usuarioId)) ?? null) : null,
+      equipoNombre: equipoId !== null ? ((await this.equipos?.buscar(equipoId))?.nombre ?? null) : null,
+    };
   }
 
   async eliminar(idMongo: string): Promise<void> {

@@ -2,6 +2,7 @@
 // (como las interfaces IRepository de la capa Application en Clean Architecture .NET).
 import type { AgregadosCrudos } from '../domain/estadisticas.js';
 import type { EstadoFormulario, Formulario, Pregunta, VersionFormulario } from '../domain/formulario.js';
+import type { MiembroActual, RolEquipo } from '../domain/permisos.js';
 import type { RespuestaValidada } from '../domain/respuesta.js';
 import type { Usuario } from '../domain/usuario.js';
 
@@ -39,10 +40,24 @@ export interface RegistroFormulario {
   creadoEn: Date;
 }
 
+/** El registro de un formulario visto por un usuario: datos crudos del JOIN, sin interpretar. */
+export interface AccesoFormulario {
+  registro: RegistroFormulario;
+  esPropietario: boolean;
+  /** Rol del usuario en el equipo con el que está compartido el formulario (null si no es miembro). */
+  rolEquipo: RolEquipo | null;
+  equipoNombre: string | null;
+}
+
 export interface RepositorioRegistroFormularios {
   crear(datos: { idMongo: string; propietarioId: number }): Promise<void>;
   buscar(idMongo: string): Promise<RegistroFormulario | null>;
-  listarPorPropietario(usuarioId: number): Promise<RegistroFormulario[]>;
+  /** El formulario y la relación del usuario con él (propietario / miembro del equipo), o null si no existe. */
+  buscarAcceso(idMongo: string, usuarioId: number): Promise<AccesoFormulario | null>;
+  /** Formularios propios y compartidos con los equipos del usuario, más recientes primero. */
+  listarAccesibles(usuarioId: number): Promise<AccesoFormulario[]>;
+  /** Comparte con un equipo o deja de compartir (null). */
+  asignarEquipo(idMongo: string, equipoId: number | null): Promise<void>;
   eliminar(idMongo: string): Promise<void>;
   /**
    * Cambia el estado solo si el actual está en `desde`, en una sola operación atómica
@@ -51,6 +66,48 @@ export interface RepositorioRegistroFormularios {
   cambiarEstado(idMongo: string, desde: EstadoFormulario[], hacia: EstadoFormulario): Promise<boolean>;
   /** De los ids recibidos, devuelve los que sí tienen registro. */
   filtrarExistentes(idsMongo: string[]): Promise<Set<string>>;
+}
+
+// ---- Equipos (MySQL) ----
+
+export interface Equipo {
+  id: number;
+  nombre: string;
+  creadoEn: Date;
+}
+
+export interface EquipoDeUsuario extends Equipo {
+  rol: RolEquipo;
+  cantidadMiembros: number;
+}
+
+export interface Miembro {
+  usuarioId: number;
+  nombre: string;
+  email: string;
+  rol: RolEquipo;
+}
+
+export interface RepositorioEquipos {
+  /** Crea el equipo y agrega al creador como propietario, en una transacción. */
+  crearConPropietario(nombre: string, usuarioId: number): Promise<Equipo>;
+  listarDeUsuario(usuarioId: number): Promise<EquipoDeUsuario[]>;
+  buscar(equipoId: number): Promise<Equipo | null>;
+  listarMiembros(equipoId: number): Promise<Miembro[]>;
+  rolDe(equipoId: number, usuarioId: number): Promise<RolEquipo | null>;
+  /** Lanza ErrorAplicacion('conflicto') si ya es miembro. */
+  agregarMiembro(equipoId: number, usuarioId: number, rol: RolEquipo): Promise<void>;
+  /**
+   * Cambia el rol de un miembro o lo quita (nuevoRol = null) dentro de una transacción que BLOQUEA
+   * los miembros del equipo (SELECT ... FOR UPDATE). `validar` recibe los miembros actuales y puede
+   * lanzar un error para cancelar: así la regla de negocio se evalúa sin carreras.
+   */
+  modificarMiembro(
+    equipoId: number,
+    usuarioId: number,
+    nuevoRol: RolEquipo | null,
+    validar: (miembros: MiembroActual[]) => void,
+  ): Promise<void>;
 }
 
 // ---- Formularios y respuestas: contenido en MongoDB ----

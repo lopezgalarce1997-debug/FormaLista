@@ -6,7 +6,7 @@ import {
 } from '../domain/estadisticas.js';
 import type { TipoPregunta, VersionFormulario } from '../domain/formulario.js';
 import type { ValorRespuesta } from '../domain/respuesta.js';
-import { formularioNoEncontrado, registroAccesible } from './acceso.js';
+import { autorizar, formularioNoEncontrado } from './acceso.js';
 import { ErrorAplicacion } from './errores.js';
 import type {
   Logger,
@@ -31,7 +31,7 @@ export interface PaginaRespuestas {
   respuestas: RespuestaListada[];
 }
 
-/** Estadísticas y listado de respuestas de un formulario (para su propietario). */
+/** Estadísticas y listado de respuestas de un formulario (cualquier rol con acceso: acción 'verResultados'). */
 export class ServicioResultados {
   constructor(
     private readonly registro: RepositorioRegistroFormularios,
@@ -45,7 +45,7 @@ export class ServicioResultados {
     id: string,
     consulta: { version: SeleccionVersion; zona: string },
   ): Promise<Resultados> {
-    await registroAccesible(this.registro, usuarioId, id);
+    await autorizar(this.registro, usuarioId, id, 'verResultados');
     const versiones = this.filtrarVersiones(await this.versionesDe(id), consulta.version);
 
     const ids = idsPorTipo(versiones);
@@ -69,7 +69,7 @@ export class ServicioResultados {
     id: string,
     consulta: { version: SeleccionVersion; pagina: number; tamano: number },
   ): Promise<PaginaRespuestas> {
-    await registroAccesible(this.registro, usuarioId, id);
+    await autorizar(this.registro, usuarioId, id, 'verResultados');
     // El historial se lee una sola vez por página, no una vez por respuesta.
     const versiones = this.filtrarVersiones(await this.versionesDe(id), consulta.version);
     const preguntasPorVersion = new Map(versiones.map((v) => [v.version, new Map(v.preguntas.map((p) => [p.id, p]))]));

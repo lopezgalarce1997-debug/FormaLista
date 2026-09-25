@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ServicioFormularios, type DatosFormulario } from '../../src/application/servicioFormularios.js';
 import { FormulariosEnMemoria, RegistroEnMemoria, RespuestasEnMemoria } from '../dobles/formulariosEnMemoria.js';
+import { EquiposEnMemoria } from '../dobles/equiposEnMemoria.js';
 
 const ANA = 1;
 const BETO = 2;
@@ -10,7 +11,7 @@ function crearEscenario() {
   const formularios = new FormulariosEnMemoria();
   const respuestas = new RespuestasEnMemoria();
   const logger = { error: vi.fn() };
-  const servicio = new ServicioFormularios(registro, formularios, respuestas, logger, () => 'sufijo01');
+  const servicio = new ServicioFormularios(registro, formularios, respuestas, new EquiposEnMemoria(), logger, () => 'sufijo01');
   return { servicio, registro, formularios, respuestas, logger };
 }
 

@@ -3,6 +3,7 @@ import { ServicioFormularios, type DatosFormulario } from '../../src/application
 import { ServicioPublico } from '../../src/application/servicioPublico.js';
 import { ServicioResultados } from '../../src/application/servicioResultados.js';
 import { FormulariosEnMemoria, RegistroEnMemoria, RespuestasEnMemoria } from '../dobles/formulariosEnMemoria.js';
+import { EquiposEnMemoria } from '../dobles/equiposEnMemoria.js';
 
 const ANA = 1;
 const BETO = 2;
@@ -22,7 +23,7 @@ async function crearEscenario() {
   const registro = new RegistroEnMemoria();
   const formularios = new FormulariosEnMemoria();
   const respuestas = new RespuestasEnMemoria();
-  const servicio = new ServicioFormularios(registro, formularios, respuestas, { error: () => {} });
+  const servicio = new ServicioFormularios(registro, formularios, respuestas, new EquiposEnMemoria(), { error: () => {} });
   const publico = new ServicioPublico(registro, formularios, respuestas);
   const resultados = new ServicioResultados(registro, formularios, respuestas, { error: () => {} });
 
