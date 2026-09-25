@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router';
+import { createBrowserRouter, RouterProvider } from 'react-router';
 import { ErrorApi } from './api/cliente';
-import { App } from './App';
+import { rutas } from './App';
 import { ProveedorSesion } from './auth/sesion';
 import './index.css';
 
@@ -17,14 +17,14 @@ const queryClient = new QueryClient({
   },
 });
 
+const router = createBrowserRouter(rutas);
+
 createRoot(document.getElementById('raiz')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ProveedorSesion>
-          <App />
-        </ProveedorSesion>
-      </BrowserRouter>
+      <ProveedorSesion>
+        <RouterProvider router={router} />
+      </ProveedorSesion>
     </QueryClientProvider>
   </StrictMode>,
 );
