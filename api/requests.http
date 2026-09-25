@@ -1,0 +1,53 @@
+# Peticiones de ejemplo para la extensión REST Client de VS Code.
+# Antes: `npm run dev` desde la raíz del repo.
+# Uso: haz clic en "Send Request" sobre cada petición, en orden.
+
+@baseUrl = http://localhost:3000/api
+@email = ana@correo.cl
+@password = secreta123
+
+### Salud de la API y de las bases de datos
+GET {{baseUrl}}/salud
+
+### Registro (la segunda vez responde 409: cambia @email para crear otro usuario)
+POST {{baseUrl}}/auth/registro
+Content-Type: application/json
+
+{
+  "nombre": "Ana",
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Login: guarda la respuesta con el nombre "login" para reutilizar el token
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Perfil del usuario autenticado (usa el token del login; ejecuta primero el login)
+GET {{baseUrl}}/auth/yo
+Authorization: Bearer {{login.response.body.token}}
+
+### Login con contraseña incorrecta (espera 401)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "incorrecta"
+}
+
+### Registro inválido (espera 400 con el detalle por campo)
+POST {{baseUrl}}/auth/registro
+Content-Type: application/json
+
+{
+  "nombre": "",
+  "email": "no-es-email",
+  "password": "123"
+}
