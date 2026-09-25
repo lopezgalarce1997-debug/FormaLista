@@ -4,7 +4,7 @@ import type { ServicioTokens } from '../../application/puertos.js';
 import type { DatosLogin, DatosRegistro, ServicioAuth } from '../../application/servicioAuth.js';
 import { autenticar } from '../middlewares/autenticar.js';
 import { crearLimitador, type ConfigLimites } from '../middlewares/limites.js';
-import { validarCuerpo } from '../middlewares/validarCuerpo.js';
+import { validarCuerpo } from '../middlewares/validar.js';
 
 // bcrypt solo considera los primeros 72 bytes: más allá, dos contraseñas distintas darían el mismo hash.
 const MAX_BYTES_PASSWORD = 72;

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { ServicioPublico } from '../../application/servicioPublico.js';
 import type { EntradaRespuestas } from '../../domain/respuesta.js';
 import { crearLimitador, type ConfigLimites } from '../middlewares/limites.js';
-import { validarCuerpo } from '../middlewares/validarCuerpo.js';
+import { validarCuerpo } from '../middlewares/validar.js';
 
 // Aquí solo se valida la forma general. El valor de cada respuesta lo valida el dominio
 // contra la definición del formulario (validarRespuestas).

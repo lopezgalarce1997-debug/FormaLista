@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { ServicioAuth } from './application/servicioAuth.js';
 import { ServicioFormularios } from './application/servicioFormularios.js';
 import { ServicioPublico } from './application/servicioPublico.js';
+import { ServicioResultados } from './application/servicioResultados.js';
 import { cargarArchivoEnv, cargarConfig } from './config/env.js';
 import { crearApp } from './http/app.js';
 import { conectarMongo, pingMongo } from './infrastructure/mongo/conexion.js';
@@ -29,6 +30,7 @@ const repoFormularios = new RepositorioFormulariosMongo();
 const repoRespuestas = new RepositorioRespuestasMongo();
 const servicioFormularios = new ServicioFormularios(repoRegistro, repoFormularios, repoRespuestas, console);
 const servicioPublico = new ServicioPublico(repoRegistro, repoFormularios, repoRespuestas);
+const servicioResultados = new ServicioResultados(repoRegistro, repoFormularios, repoRespuestas, console);
 
 const app = crearApp({
   verificadoresSalud: [
@@ -39,6 +41,7 @@ const app = crearApp({
   servicioTokens,
   servicioFormularios,
   servicioPublico,
+  servicioResultados,
   limites: { envioRespuestas: config.limiteRespuestas },
 });
 
