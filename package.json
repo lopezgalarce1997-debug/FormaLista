@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "npm run dev -w api",
     "dev:web": "npm run dev -w web",
+    "dev:web:red": "npm run dev -w web -- --host",
     "build": "npm run build -w @formalista/compartido && npm run build -w api && npm run build -w web",
     "test": "npm test --workspaces --if-present",
     "test:integracion": "npm run test:integracion -w api",
