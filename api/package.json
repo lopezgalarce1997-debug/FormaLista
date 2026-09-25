@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "migrar": "tsx --conditions=fuente src/scripts/migrar.ts",
     "limpiar-huerfanos": "tsx --conditions=fuente src/scripts/limpiarHuerfanos.ts",
+    "datos-ejemplo": "tsx --conditions=fuente src/scripts/datosEjemplo.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
