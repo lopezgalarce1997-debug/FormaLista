@@ -62,7 +62,9 @@ describe('Mis formularios: lista', () => {
 
     const filaAjena = await fila('Evaluación del taller');
     expect(within(filaAjena).getByText('Borrador')).toBeInTheDocument();
-    expect(within(filaAjena).getByText('Compartido · Marketing · editor')).toBeInTheDocument();
+    const enlaceEquipo = within(filaAjena).getByRole('link', { name: 'Marketing' });
+    expect(enlaceEquipo).toHaveAttribute('href', '/equipos/1');
+    expect(enlaceEquipo.parentElement).toHaveTextContent('Compartido · Marketing · editor');
     expect(within(filaAjena).getByText(/^1 pregunta ·/)).toBeInTheDocument();
   });
 
@@ -70,9 +72,9 @@ describe('Mis formularios: lista', () => {
     conFormularios([propio, comoEditor, comoLector]);
     renderizarApp('/formularios');
 
-    // Enlaces y botones en el orden en que aparecen.
+    // Enlaces y botones de acciones, en el orden en que aparecen.
     const botones = async (titulo: string) =>
-      [...(await fila(titulo)).querySelectorAll('a, button')].map((b) => b.textContent);
+      [...(await fila(titulo)).querySelectorAll('[aria-label^="Acciones"] :is(a, button)')].map((b) => b.textContent);
 
     expect(await botones('Encuesta de café')).toEqual(['Editar', 'Resultados', 'Copiar link', 'Eliminar']);
     expect(await botones('Evaluación del taller')).toEqual(['Editar', 'Resultados']); // borrador: sin link
