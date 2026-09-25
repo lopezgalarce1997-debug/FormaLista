@@ -1,0 +1,26 @@
+# Dependencias
+node_modules/
+
+# Builds
+dist/
+build/
+.angular/
+
+# Variables de entorno (secretos). Solo se versiona .env.example
+.env
+.env.*
+!.env.example
+
+# Pruebas
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / sistema operativo
+.vscode/*
+!.vscode/extensions.json
+.idea/
+Thumbs.db
+.DS_Store
