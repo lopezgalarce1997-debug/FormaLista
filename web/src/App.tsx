@@ -1,11 +1,27 @@
+import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
 import { createRoutesFromElements, Navigate, Route } from 'react-router';
 import { INICIO, RutaProtegida, SoloInvitados } from './auth/rutas';
+import { Cargando } from './componentes/Cargando';
 import { Layout } from './componentes/Layout';
-import { Login } from './paginas/auth/Login';
-import { Registro } from './paginas/auth/Registro';
-import { PaginaEditor } from './paginas/editor/PaginaEditor';
-import { ListaFormularios } from './paginas/formularios/ListaFormularios';
-import { Provisional } from './paginas/formularios/Provisional';
+
+/**
+ * Cada página es un archivo JavaScript aparte que se descarga al visitarla (React.lazy).
+ * Quien abre un link público descarga solo lo necesario para responder: ni el editor ni los
+ * gráficos de resultados. Las páginas exportan con nombre, por eso el adaptador { default }.
+ */
+function perezosa<M>(cargar: () => Promise<M>, nombre: keyof M) {
+  return lazy(() => cargar().then((modulo) => ({ default: modulo[nombre] as ComponentType })));
+}
+
+const Login = perezosa(() => import('./paginas/auth/Login'), 'Login');
+const Registro = perezosa(() => import('./paginas/auth/Registro'), 'Registro');
+const ListaFormularios = perezosa(() => import('./paginas/formularios/ListaFormularios'), 'ListaFormularios');
+const PaginaEditor = perezosa(() => import('./paginas/editor/PaginaEditor'), 'PaginaEditor');
+const Provisional = lazy(() => import('./paginas/formularios/Provisional').then((m) => ({ default: m.Provisional })));
+const PaginaPublica = perezosa(() => import('./paginas/publico/PaginaPublica'), 'PaginaPublica');
+
+/** Mientras se descarga el archivo de la página, se muestra "Cargando…". */
+const conCarga = (pagina: ReactNode) => <Suspense fallback={<Cargando />}>{pagina}</Suspense>;
 
 /**
  * Definición de las rutas. Se usa con un "data router" (createBrowserRouter en main.tsx y
@@ -13,16 +29,19 @@ import { Provisional } from './paginas/formularios/Provisional';
  */
 export const rutas = createRoutesFromElements(
   <>
+    {/* Pública: sin sesión y sin la barra de la app. */}
+    <Route path="/f/:slug" element={conCarga(<PaginaPublica />)} />
+
     <Route element={<SoloInvitados />}>
-      <Route path="/login" element={<Login />} />
-      <Route path="/registro" element={<Registro />} />
+      <Route path="/login" element={conCarga(<Login />)} />
+      <Route path="/registro" element={conCarga(<Registro />)} />
     </Route>
 
     <Route element={<RutaProtegida />}>
       <Route element={<Layout />}>
-        <Route path="/formularios" element={<ListaFormularios />} />
-        <Route path="/formularios/:id/editar" element={<PaginaEditor />} />
-        <Route path="/formularios/:id/resultados" element={<Provisional titulo="Resultados" pantalla={5} />} />
+        <Route path="/formularios" element={conCarga(<ListaFormularios />)} />
+        <Route path="/formularios/:id/editar" element={conCarga(<PaginaEditor />)} />
+        <Route path="/formularios/:id/resultados" element={conCarga(<Provisional titulo="Resultados" pantalla={5} />)} />
       </Route>
     </Route>
 
