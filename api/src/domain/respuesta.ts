@@ -151,16 +151,56 @@ function normalizarOpcion(texto: string): string {
   return texto.trim().toLowerCase();
 }
 
-function validarTexto(_pregunta: PreguntaTexto, _valor: unknown): ResultadoValor {
-  throw new Error('Pendiente: validación de texto');
+export const MAX_CARACTERES: Record<PreguntaTexto['tipo'], number> = {
+  texto_corto: 200,
+  texto_largo: 5000,
+};
+
+function validarTexto(pregunta: PreguntaTexto, valor: unknown): ResultadoValor {
+  if (typeof valor !== 'string') return error('Debe ser un texto');
+
+  const texto = valor.trim();
+  // [...texto] cuenta caracteres reales (code points): un emoji cuenta como 1, no como 2 como en .length.
+  const maximo = MAX_CARACTERES[pregunta.tipo];
+  if ([...texto].length > maximo) return error(`Máximo ${maximo} caracteres`);
+
+  return ok(texto);
 }
 
-function validarOpcionUnica(_pregunta: PreguntaOpciones, _valor: unknown): ResultadoValor {
-  throw new Error('Pendiente: validación de opción única');
+function validarOpcionUnica(pregunta: PreguntaOpciones, valor: unknown): ResultadoValor {
+  // Estricto con la forma: una sola opción es un texto, no una lista de un elemento.
+  if (typeof valor !== 'string') return error('Debe ser una de las opciones (texto)');
+
+  const opcion = buscarOpcion(pregunta, valor);
+  if (opcion === undefined) return error(`Opción no válida: "${valor}"`);
+
+  return ok(opcion);
 }
 
-function validarFecha(_pregunta: PreguntaFecha, _valor: unknown): ResultadoValor {
-  throw new Error('Pendiente: validación de fecha');
+const FORMATO_FECHA = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * Se guarda como texto "AAAA-MM-DD" y no como Date: una fecha sin hora no tiene zona horaria.
+ * Con Date, "2026-03-01" guardado desde Chile (UTC-3) podría leerse como el 28 de febrero.
+ */
+function validarFecha(_pregunta: PreguntaFecha, valor: unknown): ResultadoValor {
+  if (typeof valor !== 'string') return error('Debe ser una fecha con formato AAAA-MM-DD');
+
+  const coincidencia = FORMATO_FECHA.exec(valor.trim());
+  if (!coincidencia) return error('Debe ser una fecha con formato AAAA-MM-DD');
+
+  const [, anio, mes, dia] = coincidencia.map(Number) as [number, number, number, number];
+  if (!esFechaReal(anio, mes, dia)) return error('La fecha no existe');
+
+  return ok(coincidencia[0]);
+}
+
+/** Descarta fechas imposibles como 2026-02-30 o 2026-13-01, respetando los años bisiestos. */
+function esFechaReal(anio: number, mes: number, dia: number): boolean {
+  if (anio < 1000) return false; // Date.UTC interpreta los años 0–99 como 1900–1999
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia));
+  // Date "corrige" las fechas inválidas (30 de febrero → 2 de marzo): si cambió algo, no existía.
+  return fecha.getUTCFullYear() === anio && fecha.getUTCMonth() === mes - 1 && fecha.getUTCDate() === dia;
 }
 
 function sinCasoPara(pregunta: never): never {
