@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { Resumen } from '../src/api/formularios';
 import { haceTiempo } from '../src/componentes/tiempo';
 import { renderizarApp } from './renderizar';
-import { conSesion, servidor } from './servidor';
+import { conSesion, detalleDePrueba, servidor } from './servidor';
 
 const hace2Horas = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
 
@@ -81,11 +81,14 @@ describe('Mis formularios: lista', () => {
 
   it('los enlaces llevan al editor y a los resultados del formulario', async () => {
     conFormularios([propio]);
+    servidor.use(http.get('/api/formularios/f1', () => HttpResponse.json(detalleDePrueba())));
     const { usuario } = renderizarApp('/formularios');
 
     await usuario.click(within(await fila('Encuesta de café')).getByRole('link', { name: 'Editar' }));
 
-    expect(screen.getByTestId('ubicacion')).toHaveTextContent('/formularios/f1/editar');
+    // La navegación es una transición de React: la URL cambia cuando termina de descargarse el editor.
+    await waitFor(() => expect(screen.getByTestId('ubicacion')).toHaveTextContent('/formularios/f1/editar'));
+    expect(await screen.findByLabelText('Título')).toHaveValue('Encuesta de café'); // el editor cargó (archivo aparte)
   });
 
   it('Copiar link copia la URL pública y avisa', async () => {

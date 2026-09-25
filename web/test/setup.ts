@@ -5,6 +5,9 @@ import { servidor } from './servidor';
 
 // jsdom no implementa <dialog>.showModal()/close(). Polyfill mínimo con lo que usa Dialogo.tsx:
 // el atributo `open` y el evento `close` (que en el navegador dispara Esc o close()).
+// jsdom tampoco implementa scrollIntoView (no hay layout): basta con que exista.
+Element.prototype.scrollIntoView ??= function () {};
+
 if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.setAttribute('open', '');
