@@ -18,6 +18,13 @@ describe('cargarConfig', () => {
     expect(config.mysql.port).toBe(3306);
     expect(config.entorno).toBe('development');
     expect(config.jwt.expiraEn).toBe('1h');
+    expect(config.limiteRespuestas).toEqual({ ventanaMs: 15 * 60 * 1000, maximo: 60 });
+  });
+
+  it('permite configurar el límite de respuestas públicas', () => {
+    const config = cargarConfig({ ...envValido, LIMITE_RESPUESTAS_MAXIMO: '200', LIMITE_RESPUESTAS_VENTANA_MINUTOS: '5' });
+
+    expect(config.limiteRespuestas).toEqual({ ventanaMs: 5 * 60 * 1000, maximo: 200 });
   });
 
   it('falla indicando qué variable falta o es inválida', () => {

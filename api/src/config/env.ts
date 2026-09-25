@@ -17,6 +17,10 @@ const esquemaEnv = z.object({
   JWT_EXPIRES_IN: z.string().default('1h'),
 
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+
+  // Límite de envíos de respuestas públicas por IP.
+  LIMITE_RESPUESTAS_MAXIMO: z.coerce.number().int().positive().default(60),
+  LIMITE_RESPUESTAS_VENTANA_MINUTOS: z.coerce.number().int().positive().default(15),
 });
 
 export interface Config {
@@ -32,6 +36,7 @@ export interface Config {
   mongoUri: string;
   jwt: { secreto: string; expiraEn: string };
   corsOrigen: string;
+  limiteRespuestas: { ventanaMs: number; maximo: number };
 }
 
 /** Carga api/.env en process.env si existe (en CI las variables vienen del entorno). */
@@ -63,5 +68,9 @@ export function cargarConfig(fuente: NodeJS.ProcessEnv = process.env): Config {
     mongoUri: env.MONGODB_URI,
     jwt: { secreto: env.JWT_SECRET, expiraEn: env.JWT_EXPIRES_IN },
     corsOrigen: env.CORS_ORIGIN,
+    limiteRespuestas: {
+      ventanaMs: env.LIMITE_RESPUESTAS_VENTANA_MINUTOS * 60 * 1000,
+      maximo: env.LIMITE_RESPUESTAS_MAXIMO,
+    },
   };
 }

@@ -39,6 +39,7 @@ const app = crearApp({
   servicioTokens,
   servicioFormularios,
   servicioPublico,
+  limites: { envioRespuestas: config.limiteRespuestas },
 });
 
 const servidor = app.listen(config.puerto, () => {

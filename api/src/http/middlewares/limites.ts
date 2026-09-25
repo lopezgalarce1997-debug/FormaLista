@@ -19,7 +19,9 @@ export const LIMITES_POR_DEFECTO: ConfigLimites = {
   login: { ventanaMs: 15 * MINUTO, maximo: 10 },
   registro: { ventanaMs: 60 * MINUTO, maximo: 10 },
   lecturaPublica: { ventanaMs: 15 * MINUTO, maximo: 100 },
-  envioRespuestas: { ventanaMs: 15 * MINUTO, maximo: 10 },
+  // Holgado a propósito: una sala de clases o una oficina puede responder desde una misma IP.
+  // En server.ts se toma de LIMITE_RESPUESTAS_* (.env).
+  envioRespuestas: { ventanaMs: 15 * MINUTO, maximo: 60 },
 };
 
 /**
