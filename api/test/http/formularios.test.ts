@@ -79,7 +79,7 @@ describe('API de formularios', () => {
     expect(detalle.status).toBe(200);
     expect(detalle.body.preguntas).toHaveLength(3);
 
-    const editado = await comoAna(request(app).put(`/api/formularios/${creado.id}`)).send({ titulo: 'Otro' });
+    const editado = await comoAna(request(app).put(`/api/formularios/${creado.id}`)).send({ titulo: 'Otro', version: 1 });
     expect(editado.status).toBe(200);
     expect(editado.body).toMatchObject({ titulo: 'Otro', preguntas: [], slug: creado.slug });
   });
@@ -99,7 +99,7 @@ describe('API de formularios', () => {
     const comoBeto = (req: request.Test) => req.set('Authorization', `Bearer ${tokenBeto}`);
 
     expect((await comoBeto(request(app).get(`/api/formularios/${creado.id}`))).status).toBe(404);
-    expect((await comoBeto(request(app).put(`/api/formularios/${creado.id}`)).send(cuerpo)).status).toBe(404);
+    expect((await comoBeto(request(app).put(`/api/formularios/${creado.id}`)).send({ ...cuerpo, version: 1 })).status).toBe(404);
     expect((await comoBeto(request(app).delete(`/api/formularios/${creado.id}`))).status).toBe(404);
     expect((await comoBeto(request(app).get('/api/formularios'))).body.formularios).toEqual([]);
   });

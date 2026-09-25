@@ -1,7 +1,11 @@
 import { Router, type Request } from 'express';
 import { z } from 'zod';
 import type { ServicioTokens } from '../../application/puertos.js';
-import type { DatosFormulario, ServicioFormularios } from '../../application/servicioFormularios.js';
+import type {
+  DatosActualizacion,
+  DatosFormulario,
+  ServicioFormularios,
+} from '../../application/servicioFormularios.js';
 import { autenticar } from '../middlewares/autenticar.js';
 import { validarCuerpo } from '../middlewares/validarCuerpo.js';
 
@@ -24,11 +28,17 @@ const esquemaPregunta = z.discriminatedUnion('tipo', [
   z.object({ ...base, tipo: z.literal('escala'), minimo: valorEscala.default(1), maximo: valorEscala.default(5) }),
 ]);
 
-// z.object descarta los campos que no declara: el cliente no puede fijar slug, version ni estado.
+// z.object descarta los campos que no declara: el cliente no puede fijar slug ni estado.
 const esquemaFormulario = z.object({
   titulo: z.string().trim().min(1, 'Es obligatorio').max(200, 'Máximo 200 caracteres'),
   descripcion: z.string().trim().max(2000, 'Máximo 2000 caracteres').default(''),
   preguntas: z.array(esquemaPregunta).max(100, 'Máximo 100 preguntas').default([]),
+});
+
+// Al editar, `version` es obligatoria: es la versión que el cliente tenía abierta (concurrencia
+// optimista). No fija la versión: el servidor la compara con la vigente y decide si sube.
+const esquemaActualizacion = esquemaFormulario.extend({
+  version: z.number('Es obligatoria (la versión que estabas editando)').int().positive(),
 });
 
 // Con middlewares antes del handler, los tipos de Express no infieren ":id"; se lee explícitamente.
@@ -51,8 +61,8 @@ export function crearRutasFormularios(servicio: ServicioFormularios, tokens: Ser
     res.json(await servicio.obtener(req.usuarioId!, idDe(req)));
   });
 
-  router.put('/:id', validarCuerpo(esquemaFormulario), async (req, res) => {
-    const datos: DatosFormulario = req.body;
+  router.put('/:id', validarCuerpo(esquemaActualizacion), async (req, res) => {
+    const datos: DatosActualizacion = req.body;
     res.json(await servicio.actualizar(req.usuarioId!, idDe(req), datos));
   });
 

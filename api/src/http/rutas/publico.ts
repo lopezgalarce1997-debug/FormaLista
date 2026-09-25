@@ -9,6 +9,8 @@ import { validarCuerpo } from '../middlewares/validarCuerpo.js';
 // contra la definición del formulario (validarRespuestas).
 const esquemaEnvio = z.object({
   respuestas: z.record(z.string(), z.unknown()),
+  /** Versión que vio quien responde (viene en el GET público). Si se omite, se usa la vigente. */
+  version: z.number().int().positive().optional(),
 });
 
 const slugDe = (req: Request): string => String(req.params.slug);
@@ -26,8 +28,8 @@ export function crearRutasPublicas(servicio: ServicioPublico, limites: ConfigLim
     crearLimitador(limites.envioRespuestas),
     validarCuerpo(esquemaEnvio),
     async (req, res) => {
-      const { respuestas }: { respuestas: EntradaRespuestas } = req.body;
-      res.status(201).json(await servicio.responder(slugDe(req), respuestas));
+      const { respuestas, version }: { respuestas: EntradaRespuestas; version?: number } = req.body;
+      res.status(201).json(await servicio.responder(slugDe(req), respuestas, version));
     },
   );
 
