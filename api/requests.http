@@ -130,6 +130,57 @@ Content-Type: application/json
   }
 }
 
+# ======================== Equipos y compartir ========================
+# Para probar roles, registra un segundo usuario (cambia @email arriba) y agrégalo por email.
+
+### Crear equipo (quien lo crea queda como propietario)
+# @name equipo
+POST {{baseUrl}}/equipos
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{ "nombre": "Marketing" }
+
+### Mis equipos (con mi rol y cantidad de miembros)
+GET {{baseUrl}}/equipos
+Authorization: Bearer {{login.response.body.token}}
+
+### Detalle del equipo con sus miembros
+GET {{baseUrl}}/equipos/{{equipo.response.body.id}}
+Authorization: Bearer {{login.response.body.token}}
+
+### Agregar miembro por email (rol: propietario | editor | lector). 404 si el email no está registrado
+POST {{baseUrl}}/equipos/{{equipo.response.body.id}}/miembros
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{ "email": "beto@correo.cl", "rol": "editor" }
+
+### Cambiar el rol de un miembro (reemplaza 2 por su usuarioId)
+PATCH {{baseUrl}}/equipos/{{equipo.response.body.id}}/miembros/2
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{ "rol": "lector" }
+
+### Quitar a un miembro (o salir del equipo con tu propio id). 409 si eres el último propietario
+DELETE {{baseUrl}}/equipos/{{equipo.response.body.id}}/miembros/2
+Authorization: Bearer {{login.response.body.token}}
+
+### Compartir el formulario con el equipo (solo su propietario)
+POST {{baseUrl}}/formularios/{{formulario.response.body.id}}/compartir
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{ "equipoId": {{equipo.response.body.id}} }
+
+### Dejar de compartir
+POST {{baseUrl}}/formularios/{{formulario.response.body.id}}/compartir
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{ "equipoId": null }
+
 # ============================ Resultados ============================
 
 ### Estadísticas combinando todas las versiones (zona por defecto: America/Santiago)
