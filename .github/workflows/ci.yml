@@ -1,0 +1,107 @@
+# Integración continua: en cada push a main y en cada pull request se verifica que el proyecto
+# compile y que pasen todas las pruebas. Dos jobs en paralelo:
+#   - pruebas:     tipos + pruebas unitarias + build (sin bases de datos), en Node 22 y 24.
+#   - integracion: repositorios contra bases REALES: MySQL en un contenedor de servicio y
+#                  MongoDB en memoria (mongodb-memory-server).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Si llega un push nuevo a la misma rama, se cancela la ejecución anterior (ya no sirve).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Mínimo privilegio: el workflow solo necesita leer el código.
+permissions:
+  contents: read
+
+env:
+  # mongodb-memory-server intenta descargar MongoDB al instalar. Se desactiva: la descarga se hace
+  # en la primera prueba de integración, con la versión fijada en api/package.json (8.2.6).
+  MONGOMS_DISABLE_POSTINSTALL: '1'
+
+jobs:
+  pruebas:
+    name: Tipos, pruebas unitarias y build (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24] # "engines": ">=22" en package.json
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm # cachea ~/.npm según package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Revisar tipos (compartido, api, web; incluye las pruebas)
+        run: npm run typecheck --workspaces --if-present
+
+      - name: Pruebas unitarias
+        run: npm test
+
+      - name: Build (compartido → api → web)
+        run: npm run build
+
+  integracion:
+    name: Pruebas de integración (MySQL 8.4 + MongoDB 8.2)
+    # Versión fija del sistema: el binario de MongoDB depende de ella (y la clave de la caché también).
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          # Contenedor desechable que solo existe durante este job: estas credenciales no son secretas.
+          MYSQL_ROOT_PASSWORD: root-ci
+          MYSQL_DATABASE: formalista_pruebas
+          MYSQL_USER: formalista
+          MYSQL_PASSWORD: formalista-ci
+        ports:
+          - 3306:3306
+        # El job espera a que MySQL acepte conexiones antes de empezar.
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+
+    env:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: '3306'
+      MYSQL_USER: formalista
+      MYSQL_PASSWORD: formalista-ci
+      MYSQL_DATABASE_PRUEBAS: formalista_pruebas
+      # Carpeta fija para el binario de MongoDB, así se puede cachear entre ejecuciones.
+      MONGOMS_DOWNLOAD_DIR: ${{ github.workspace }}/.cache/mongodb-binaries
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Caché del binario de MongoDB
+        uses: actions/cache@v4
+        with:
+          path: .cache/mongodb-binaries
+          key: mongodb-8.2.6-ubuntu-24.04
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Pruebas de integración
+        run: npm run test:integracion

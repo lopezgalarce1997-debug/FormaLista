@@ -24,3 +24,6 @@ npm-debug.log*
 .idea/
 Thumbs.db
 .DS_Store
+
+# Binario de MongoDB descargado en CI (mongodb-memory-server)
+.cache/

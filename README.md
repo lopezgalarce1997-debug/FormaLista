@@ -1,5 +1,7 @@
 # FormaLista
 
+[![CI](https://github.com/lopezgalarce1997-debug/FormaLista/actions/workflows/ci.yml/badge.svg)](https://github.com/lopezgalarce1997-debug/FormaLista/actions/workflows/ci.yml)
+
 Creador de formularios y encuestas: los usuarios crean formularios, los publican con un link público y ven los resultados con gráficos.
 
 **Stack:** Node.js · Express · TypeScript · MySQL · MongoDB · React · Vite
