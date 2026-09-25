@@ -3,6 +3,7 @@
 import mongoose from 'mongoose';
 import { ServicioAuth } from './application/servicioAuth.js';
 import { ServicioFormularios } from './application/servicioFormularios.js';
+import { ServicioPublico } from './application/servicioPublico.js';
 import { cargarArchivoEnv, cargarConfig } from './config/env.js';
 import { crearApp } from './http/app.js';
 import { conectarMongo, pingMongo } from './infrastructure/mongo/conexion.js';
@@ -23,12 +24,11 @@ const conexionMongo = await conectarMongo(config.mongoUri);
 
 const servicioTokens = new ServicioTokensJwt(config.jwt.secreto, config.jwt.expiraEn);
 const servicioAuth = new ServicioAuth(new RepositorioUsuariosMySql(pool), new HasheadorBcrypt(), servicioTokens);
-const servicioFormularios = new ServicioFormularios(
-  new RepositorioRegistroFormulariosMySql(pool),
-  new RepositorioFormulariosMongo(),
-  new RepositorioRespuestasMongo(),
-  console,
-);
+const repoRegistro = new RepositorioRegistroFormulariosMySql(pool);
+const repoFormularios = new RepositorioFormulariosMongo();
+const repoRespuestas = new RepositorioRespuestasMongo();
+const servicioFormularios = new ServicioFormularios(repoRegistro, repoFormularios, repoRespuestas, console);
+const servicioPublico = new ServicioPublico(repoRegistro, repoFormularios, repoRespuestas);
 
 const app = crearApp({
   verificadoresSalud: [
@@ -38,6 +38,7 @@ const app = crearApp({
   servicioAuth,
   servicioTokens,
   servicioFormularios,
+  servicioPublico,
 });
 
 const servidor = app.listen(config.puerto, () => {

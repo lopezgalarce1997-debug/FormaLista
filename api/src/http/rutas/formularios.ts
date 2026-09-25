@@ -56,6 +56,14 @@ export function crearRutasFormularios(servicio: ServicioFormularios, tokens: Ser
     res.json(await servicio.actualizar(req.usuarioId!, idDe(req), datos));
   });
 
+  router.post('/:id/publicar', async (req, res) => {
+    res.json(await servicio.publicar(req.usuarioId!, idDe(req)));
+  });
+
+  router.post('/:id/cerrar', async (req, res) => {
+    res.json(await servicio.cerrar(req.usuarioId!, idDe(req)));
+  });
+
   router.delete('/:id', async (req, res) => {
     await servicio.eliminar(req.usuarioId!, idDe(req));
     res.status(204).end();

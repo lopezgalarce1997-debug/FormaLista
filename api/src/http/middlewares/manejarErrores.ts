@@ -7,6 +7,7 @@ const STATUS_POR_TIPO: Record<TipoError, number> = {
   prohibido: 403,
   no_encontrado: 404,
   conflicto: 409,
+  no_disponible: 410,
 };
 
 export const rutaNoEncontrada: RequestHandler = (_req, res) => {
@@ -20,7 +21,9 @@ export const rutaNoEncontrada: RequestHandler = (_req, res) => {
 export const manejarErrores: ErrorRequestHandler = (err, _req, res, _next) => {
   // Errores esperados del negocio: su mensaje está pensado para el cliente.
   if (err instanceof ErrorAplicacion) {
-    res.status(STATUS_POR_TIPO[err.tipo]).json({ error: err.message });
+    res
+      .status(STATUS_POR_TIPO[err.tipo])
+      .json(err.detalles ? { error: err.message, detalles: err.detalles } : { error: err.message });
     return;
   }
 

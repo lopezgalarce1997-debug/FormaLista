@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { ServicioTokens } from '../../application/puertos.js';
 import type { DatosLogin, DatosRegistro, ServicioAuth } from '../../application/servicioAuth.js';
 import { autenticar } from '../middlewares/autenticar.js';
+import { crearLimitador, type ConfigLimites } from '../middlewares/limites.js';
 import { validarCuerpo } from '../middlewares/validarCuerpo.js';
 
 // bcrypt solo considera los primeros 72 bytes: más allá, dos contraseñas distintas darían el mismo hash.
@@ -23,15 +24,16 @@ const esquemaLogin = z.object({
   password: z.string().min(1, 'Es obligatorio').max(1024),
 });
 
-export function crearRutasAuth(servicio: ServicioAuth, tokens: ServicioTokens): Router {
+export function crearRutasAuth(servicio: ServicioAuth, tokens: ServicioTokens, limites: ConfigLimites): Router {
   const router = Router();
 
-  router.post('/registro', validarCuerpo(esquemaRegistro), async (req, res) => {
+  router.post('/registro', crearLimitador(limites.registro), validarCuerpo(esquemaRegistro), async (req, res) => {
     const datos: DatosRegistro = req.body;
     res.status(201).json(await servicio.registrar(datos));
   });
 
-  router.post('/login', validarCuerpo(esquemaLogin), async (req, res) => {
+  // Solo cuentan los intentos fallidos: frena la fuerza bruta sin castigar a quien entra bien.
+  router.post('/login', crearLimitador(limites.login, { soloFallidos: true }), validarCuerpo(esquemaLogin), async (req, res) => {
     const datos: DatosLogin = req.body;
     res.json(await servicio.login(datos));
   });
