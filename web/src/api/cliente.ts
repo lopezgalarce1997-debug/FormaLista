@@ -12,6 +12,8 @@ export class ErrorApi extends Error {
 
 type Metodo = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+export const SIN_CONEXION = 'No se pudo conectar con el servidor. Intenta de nuevo en unos segundos.';
+
 let alExpirarSesion: (() => void) | null = null;
 
 /** El proveedor de sesión se registra aquí para enterarse de un 401 en cualquier llamada. */
@@ -37,9 +39,12 @@ export async function pedir<T>(ruta: string, opciones: { metodo?: Metodo; cuerpo
       body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
     });
   } catch {
-    throw new ErrorApi(0, 'No se pudo conectar con el servidor. Revisa tu conexión.');
+    throw new ErrorApi(0, SIN_CONEXION);
   }
 
+  // 502/503/504: la respuesta la dio un intermediario (el proxy de Vite o uno de producción) porque
+  // la API no contestó. Para quien usa la app es lo mismo que no tener conexión.
+  if (respuesta.status >= 502 && respuesta.status <= 504) throw new ErrorApi(respuesta.status, SIN_CONEXION);
   if (respuesta.status === 204) return undefined as T;
   const datos = await respuesta.json().catch(() => null);
 
