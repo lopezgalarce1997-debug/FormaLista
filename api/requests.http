@@ -51,3 +51,59 @@ Content-Type: application/json
   "email": "no-es-email",
   "password": "123"
 }
+
+# ============================ Formularios ============================
+# Todas requieren el token: ejecuta primero el login.
+
+### Crear formulario (guarda la respuesta como "formulario")
+# @name formulario
+POST {{baseUrl}}/formularios
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "titulo": "Encuesta de café",
+  "descripcion": "Queremos conocer tus gustos",
+  "preguntas": [
+    { "tipo": "texto_corto", "texto": "¿Cómo te llamas?", "obligatoria": true },
+    { "tipo": "opcion_unica", "texto": "¿Cuál prefieres?", "opciones": ["Latte", "Espresso", "Capuccino"] },
+    { "tipo": "opcion_multiple", "texto": "¿Qué acompañamientos te gustan?", "opciones": ["Azúcar", "Canela", "Leche"] },
+    { "tipo": "escala", "texto": "¿Qué tan satisfecho estás?", "minimo": 1, "maximo": 5 },
+    { "tipo": "fecha", "texto": "¿Cuándo fue tu última visita?" },
+    { "tipo": "texto_largo", "texto": "Comentarios" }
+  ]
+}
+
+### Listar mis formularios
+GET {{baseUrl}}/formularios
+Authorization: Bearer {{login.response.body.token}}
+
+### Obtener el formulario creado
+GET {{baseUrl}}/formularios/{{formulario.response.body.id}}
+Authorization: Bearer {{login.response.body.token}}
+
+### Actualizar (reemplaza título, descripción y preguntas; el slug no cambia)
+PUT {{baseUrl}}/formularios/{{formulario.response.body.id}}
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "titulo": "Encuesta de café (v2)",
+  "preguntas": [
+    { "tipo": "escala", "texto": "Del 1 al 5, ¿nos recomendarías?", "obligatoria": true }
+  ]
+}
+
+### Regla de negocio incumplida (espera 400: una sola opción)
+POST {{baseUrl}}/formularios
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "titulo": "Inválido",
+  "preguntas": [{ "tipo": "opcion_unica", "texto": "¿Sí?", "opciones": ["Sí"] }]
+}
+
+### Eliminar (espera 204; borra también sus respuestas)
+DELETE {{baseUrl}}/formularios/{{formulario.response.body.id}}
+Authorization: Bearer {{login.response.body.token}}
