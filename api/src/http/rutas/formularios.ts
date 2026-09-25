@@ -42,6 +42,11 @@ const esquemaActualizacion = esquemaFormulario.extend({
   version: z.number('Es obligatoria (la versión que estabas editando)').int().positive(),
 });
 
+// equipoId es obligatorio para que "dejar de compartir" sea explícito: { "equipoId": null }.
+const esquemaCompartir = z.object({
+  equipoId: z.number('Indica el equipo (o null para dejar de compartir)').int().positive().nullable(),
+});
+
 // ---- Query strings de resultados y listado ----
 
 const seleccionVersion = z
@@ -106,6 +111,11 @@ export function crearRutasFormularios(
   router.get('/:id/respuestas', validarConsulta(esquemaListado), async (req, res) => {
     const consulta = res.locals.consulta as z.infer<typeof esquemaListado>;
     res.json(await resultados.listarRespuestas(req.usuarioId!, idDe(req), consulta));
+  });
+
+  router.post('/:id/compartir', validarCuerpo(esquemaCompartir), async (req, res) => {
+    const { equipoId }: z.infer<typeof esquemaCompartir> = req.body;
+    res.json(await servicio.compartir(req.usuarioId!, idDe(req), equipoId));
   });
 
   router.post('/:id/publicar', async (req, res) => {
