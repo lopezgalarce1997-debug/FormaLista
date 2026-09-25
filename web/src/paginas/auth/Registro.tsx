@@ -2,11 +2,10 @@ import { esquemaRegistro } from '@formalista/compartido';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { z } from 'zod';
 import { apiAuth } from '../../api/auth';
 import { ErrorApi } from '../../api/cliente';
-import { destinoSeguro } from '../../auth/rutas';
 import { useSesion } from '../../auth/sesion';
 import { aplicarErroresServidor } from '../../componentes/erroresServidor';
 import { Alerta, Boton, Campo } from '../../componentes/ui';
@@ -21,7 +20,6 @@ type DatosFormulario = z.input<typeof esquema>;
 
 export function Registro() {
   const { establecerUsuario } = useSesion();
-  const navegar = useNavigate();
   const [parametros] = useSearchParams();
 
   const { register, handleSubmit, setError, formState } = useForm<DatosFormulario, unknown, z.output<typeof esquema>>({
@@ -31,10 +29,8 @@ export function Registro() {
 
   const registro = useMutation({
     mutationFn: apiAuth.registrar,
-    onSuccess: (usuario) => {
-      establecerUsuario(usuario);
-      navegar(destinoSeguro(parametros.get('volver')), { replace: true });
-    },
+    // Solo guarda el usuario: SoloInvitados redirige a ?volver= cuando la sesión ya está en el contexto.
+    onSuccess: establecerUsuario,
     onError: (error) => {
       // 409: el único conflicto posible es el email; se muestra junto a ese campo.
       if (error instanceof ErrorApi && error.status === 409) setError('email', { message: error.message });

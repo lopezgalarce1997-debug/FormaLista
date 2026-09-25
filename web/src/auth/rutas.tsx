@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useLocation } from 'react-router';
+import { Navigate, Outlet, useLocation, useSearchParams } from 'react-router';
 import { Cargando } from '../componentes/Cargando';
 import { useSesion } from './sesion';
 
@@ -14,12 +14,19 @@ export function RutaProtegida() {
   return <Outlet />;
 }
 
-/** Login y registro: si ya hay sesión, no tiene sentido mostrarlos. */
+/**
+ * Login y registro: si hay sesión, lleva a `?volver=` (o al inicio).
+ * Es el ÚNICO lugar que redirige después de iniciar sesión: Login y Registro solo guardan el
+ * usuario. Si además navegaran ellos, la navegación podría adelantarse a que la sesión llegue al
+ * contexto (TanStack Query notifica en el ciclo siguiente) y RutaProtegida rebotaría al login,
+ * perdiendo el destino.
+ */
 export function SoloInvitados() {
   const { usuario, cargando } = useSesion();
+  const [parametros] = useSearchParams();
 
   if (cargando) return <Cargando />;
-  if (usuario) return <Navigate to={INICIO} replace />;
+  if (usuario) return <Navigate to={destinoSeguro(parametros.get('volver'))} replace />;
   return <Outlet />;
 }
 

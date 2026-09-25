@@ -49,6 +49,18 @@ describe('Login', () => {
     expect(screen.getByText('Ana')).toBeInTheDocument(); // nombre en la barra superior
   });
 
+  it('conserva un destino profundo: entra directo a la página que pedía, sin pasar por la lista', async () => {
+    servidor.use(http.post('/api/auth/login', () => HttpResponse.json({ usuario: ana, token: 'ignorado' })));
+    const { usuario } = renderizarApp('/formularios/abc/editar');
+
+    await usuario.type(await screen.findByLabelText('Email'), 'ana@correo.cl');
+    await usuario.type(screen.getByLabelText('Contraseña'), 'secreta123');
+    await usuario.click(screen.getByRole('button', { name: 'Entrar' }));
+
+    expect(await screen.findByRole('heading', { name: 'Editor' })).toBeInTheDocument();
+    expect(ubicacion()).toBe('/formularios/abc/editar');
+  });
+
   it('con credenciales incorrectas muestra el mensaje de la API', async () => {
     servidor.use(
       http.post('/api/auth/login', () => HttpResponse.json({ error: 'Credenciales inválidas' }, { status: 401 })),

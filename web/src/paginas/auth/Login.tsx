@@ -2,9 +2,8 @@ import { esquemaLogin, type DatosLogin } from '@formalista/compartido';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { apiAuth } from '../../api/auth';
-import { destinoSeguro } from '../../auth/rutas';
 import { useSesion } from '../../auth/sesion';
 import { aplicarErroresServidor } from '../../componentes/erroresServidor';
 import { Alerta, Boton, Campo } from '../../componentes/ui';
@@ -12,9 +11,7 @@ import { PantallaAuth } from './PantallaAuth';
 
 export function Login() {
   const { establecerUsuario } = useSesion();
-  const navegar = useNavigate();
   const [parametros] = useSearchParams();
-  const destino = destinoSeguro(parametros.get('volver'));
 
   // Mismo esquema Zod que usa la API para validar el login (paquete compartido).
   const { register, handleSubmit, setError, formState } = useForm<DatosLogin>({ resolver: zodResolver(esquemaLogin) });
@@ -22,10 +19,8 @@ export function Login() {
 
   const login = useMutation({
     mutationFn: apiAuth.login,
-    onSuccess: (usuario) => {
-      establecerUsuario(usuario);
-      navegar(destino, { replace: true });
-    },
+    // Solo guarda el usuario: SoloInvitados redirige a ?volver= cuando la sesión ya está en el contexto.
+    onSuccess: establecerUsuario,
     onError: (error) => aplicarErroresServidor(error, setError, ['email', 'password']),
   });
 
