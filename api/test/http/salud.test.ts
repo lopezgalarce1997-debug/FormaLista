@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { crearApp } from '../../src/http/app.js';
 import type { VerificadorSalud } from '../../src/http/rutas/salud.js';
+import { crearAppDePrueba } from '../dobles/crearAppDePrueba.js';
 
 const ok = (nombre: string): VerificadorSalud => ({ nombre, verificar: async () => {} });
 const caido = (nombre: string): VerificadorSalud => ({
@@ -13,7 +13,7 @@ const caido = (nombre: string): VerificadorSalud => ({
 
 describe('GET /api/salud', () => {
   it('responde 200 cuando todas las bases responden', async () => {
-    const app = crearApp({ verificadoresSalud: [ok('mysql'), ok('mongo')] });
+    const app = crearAppDePrueba({ verificadoresSalud: [ok('mysql'), ok('mongo')] });
 
     const res = await request(app).get('/api/salud');
 
@@ -22,7 +22,7 @@ describe('GET /api/salud', () => {
   });
 
   it('responde 503 e indica qué base falla, sin exponer el error interno', async () => {
-    const app = crearApp({ verificadoresSalud: [ok('mysql'), caido('mongo')] });
+    const app = crearAppDePrueba({ verificadoresSalud: [ok('mysql'), caido('mongo')] });
 
     const res = await request(app).get('/api/salud');
 
@@ -33,7 +33,7 @@ describe('GET /api/salud', () => {
 });
 
 describe('manejo global de errores', () => {
-  const app = crearApp({ verificadoresSalud: [] });
+  const app = crearAppDePrueba({ verificadoresSalud: [] });
 
   it('responde 404 en rutas que no existen', async () => {
     const res = await request(app).get('/api/no-existe');
