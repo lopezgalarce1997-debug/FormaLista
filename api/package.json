@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
     "migrar": "tsx src/scripts/migrar.ts",
+    "limpiar-huerfanos": "tsx src/scripts/limpiarHuerfanos.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
