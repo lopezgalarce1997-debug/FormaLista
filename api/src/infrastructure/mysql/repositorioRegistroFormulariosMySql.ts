@@ -1,4 +1,4 @@
-import type { Pool, RowDataPacket } from 'mysql2/promise';
+import type { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import type { RegistroFormulario, RepositorioRegistroFormularios } from '../../application/puertos.js';
 import type { EstadoFormulario } from '../../domain/formulario.js';
 
@@ -41,6 +41,16 @@ export class RepositorioRegistroFormulariosMySql implements RepositorioRegistroF
 
   async eliminar(idMongo: string): Promise<void> {
     await this.pool.execute('DELETE FROM formularios_registro WHERE id_mongo = ?', [idMongo]);
+  }
+
+  async cambiarEstado(idMongo: string, desde: EstadoFormulario[], hacia: EstadoFormulario): Promise<boolean> {
+    // La condición sobre el estado actual va en el mismo UPDATE: MySQL lo evalúa y escribe de forma
+    // atómica, así que dos peticiones simultáneas no pueden aplicar la misma transición.
+    const [resultado] = await this.pool.query<ResultSetHeader>(
+      'UPDATE formularios_registro SET estado = ? WHERE id_mongo = ? AND estado IN (?)',
+      [hacia, idMongo, desde],
+    );
+    return resultado.affectedRows === 1;
   }
 
   async filtrarExistentes(idsMongo: string[]): Promise<Set<string>> {

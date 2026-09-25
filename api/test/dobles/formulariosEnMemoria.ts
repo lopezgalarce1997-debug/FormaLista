@@ -1,11 +1,13 @@
 import type {
   ContenidoFormulario,
+  NuevaRespuesta,
   RegistroFormulario,
   RepositorioFormularios,
   RepositorioRegistroFormularios,
   RepositorioRespuestas,
+  RespuestaGuardada,
 } from '../../src/application/puertos.js';
-import type { Formulario } from '../../src/domain/formulario.js';
+import type { EstadoFormulario, Formulario } from '../../src/domain/formulario.js';
 
 /** Permite simular que una base de datos falla en un método concreto: `repo.fallarEn('crear')`. */
 class ConFallasSimuladas<M extends string> {
@@ -48,6 +50,14 @@ export class RegistroEnMemoria
     this.filas.delete(idMongo);
   }
 
+  async cambiarEstado(idMongo: string, desde: EstadoFormulario[], hacia: EstadoFormulario): Promise<boolean> {
+    this.revisarFalla('cambiarEstado');
+    const fila = this.filas.get(idMongo);
+    if (!fila || !desde.includes(fila.estado)) return false;
+    fila.estado = hacia;
+    return true;
+  }
+
   async filtrarExistentes(idsMongo: string[]): Promise<Set<string>> {
     this.revisarFalla('filtrarExistentes');
     return new Set(idsMongo.filter((id) => this.filas.has(id)));
@@ -75,6 +85,11 @@ export class FormulariosEnMemoria
     return this.documentos.get(id) ?? null;
   }
 
+  async buscarPorSlug(slug: string): Promise<Formulario | null> {
+    this.revisarFalla('buscarPorSlug');
+    return [...this.documentos.values()].find((f) => f.slug === slug) ?? null;
+  }
+
   async buscarPorIds(ids: string[]): Promise<Formulario[]> {
     this.revisarFalla('buscarPorIds');
     return ids.flatMap((id) => this.documentos.get(id) ?? []);
@@ -100,31 +115,41 @@ export class FormulariosEnMemoria
   }
 }
 
-/** Doble de MongoDB (colección respuestas). Solo guarda a qué formulario pertenece cada respuesta. */
+/** Doble de MongoDB (colección respuestas). */
 export class RespuestasEnMemoria
   extends ConFallasSimuladas<keyof RepositorioRespuestas>
   implements RepositorioRespuestas
 {
-  readonly formularioIds: string[] = [];
+  guardadas: RespuestaGuardada[] = [];
+  private siguienteId = 1;
 
+  /** Atajo para pruebas: agrega `cantidad` respuestas vacías a un formulario. */
   agregar(formularioId: string, cantidad = 1): void {
-    for (let i = 0; i < cantidad; i++) this.formularioIds.push(formularioId);
+    for (let i = 0; i < cantidad; i++) {
+      this.guardadas.push({ id: `r${this.siguienteId++}`, formularioId, version: 1, respuestas: [], enviadaEn: new Date() });
+    }
   }
 
   contarDe(formularioId: string): number {
-    return this.formularioIds.filter((id) => id === formularioId).length;
+    return this.guardadas.filter((r) => r.formularioId === formularioId).length;
+  }
+
+  async crear(datos: NuevaRespuesta): Promise<RespuestaGuardada> {
+    this.revisarFalla('crear');
+    const guardada = { ...datos, id: `r${this.siguienteId++}`, enviadaEn: new Date() };
+    this.guardadas.push(guardada);
+    return guardada;
   }
 
   async eliminarPorFormulario(formularioId: string): Promise<number> {
     this.revisarFalla('eliminarPorFormulario');
-    const antes = this.formularioIds.length;
-    const restantes = this.formularioIds.filter((id) => id !== formularioId);
-    this.formularioIds.splice(0, this.formularioIds.length, ...restantes);
-    return antes - restantes.length;
+    const antes = this.guardadas.length;
+    this.guardadas = this.guardadas.filter((r) => r.formularioId !== formularioId);
+    return antes - this.guardadas.length;
   }
 
   async listarIdsDeFormularios(): Promise<string[]> {
     this.revisarFalla('listarIdsDeFormularios');
-    return [...new Set(this.formularioIds)];
+    return [...new Set(this.guardadas.map((r) => r.formularioId))];
   }
 }

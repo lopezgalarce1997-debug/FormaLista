@@ -1,7 +1,10 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import {
   crearSlug,
+  TRANSICIONES,
   validarDefinicion,
+  validarTransicion,
+  type AccionEstado,
   type EstadoFormulario,
   type Formulario,
   type Pregunta,
@@ -130,6 +133,35 @@ export class ServicioFormularios {
         error: contenido.reason,
       });
     }
+  }
+
+  publicar(usuarioId: number, id: string): Promise<FormularioConEstado> {
+    return this.cambiarEstado(usuarioId, id, 'publicar');
+  }
+
+  cerrar(usuarioId: number, id: string): Promise<FormularioConEstado> {
+    return this.cambiarEstado(usuarioId, id, 'cerrar');
+  }
+
+  /** El estado vive solo en MySQL: publicar y cerrar tocan una sola base. */
+  private async cambiarEstado(usuarioId: number, id: string, accion: AccionEstado): Promise<FormularioConEstado> {
+    const registro = await this.registroPropio(usuarioId, id);
+    const formulario = this.conEstado(await this.formularios.buscarPorId(id), registro);
+
+    // Chequeo previo: da un mensaje claro al usuario.
+    const invalida = validarTransicion(accion, registro.estado, formulario.preguntas.length);
+    if (invalida) {
+      throw new ErrorAplicacion(invalida.motivo === 'sin_preguntas' ? 'validacion' : 'conflicto', invalida.mensaje);
+    }
+
+    // Protección definitiva: UPDATE condicionado al estado actual. Si otra petición cambió el estado
+    // entre la lectura y la escritura, no se aplica (evita, p. ej., cerrar dos veces a la vez).
+    const { desde, hacia } = TRANSICIONES[accion];
+    if (!(await this.registro.cambiarEstado(id, desde, hacia))) {
+      throw new ErrorAplicacion('conflicto', 'El estado del formulario cambió; vuelve a intentarlo');
+    }
+
+    return { ...formulario, estado: hacia };
   }
 
   private async compensarCreacion(id: string): Promise<void> {

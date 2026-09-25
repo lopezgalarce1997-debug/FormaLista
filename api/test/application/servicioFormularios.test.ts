@@ -188,3 +188,65 @@ describe('ServicioFormularios.eliminar', () => {
     expect(registro.filas.has(deAna.id)).toBe(true);
   });
 });
+
+describe('ServicioFormularios: publicar y cerrar', () => {
+  it('publica un borrador y lo cierra', async () => {
+    const { servicio, registro } = crearEscenario();
+    const creado = await servicio.crear(ANA, datos);
+
+    expect(await servicio.publicar(ANA, creado.id)).toMatchObject({ id: creado.id, estado: 'publicado' });
+    expect(registro.filas.get(creado.id)?.estado).toBe('publicado');
+
+    expect(await servicio.cerrar(ANA, creado.id)).toMatchObject({ estado: 'cerrado' });
+    expect(registro.filas.get(creado.id)?.estado).toBe('cerrado');
+  });
+
+  it('permite reabrir (publicar) un formulario cerrado', async () => {
+    const { servicio } = crearEscenario();
+    const creado = await servicio.crear(ANA, datos);
+    await servicio.publicar(ANA, creado.id);
+    await servicio.cerrar(ANA, creado.id);
+
+    expect(await servicio.publicar(ANA, creado.id)).toMatchObject({ estado: 'publicado' });
+  });
+
+  it('responde conflicto si la transición no aplica al estado actual', async () => {
+    const { servicio } = crearEscenario();
+    const creado = await servicio.crear(ANA, datos);
+
+    await expect(servicio.cerrar(ANA, creado.id)).rejects.toMatchObject({
+      tipo: 'conflicto',
+      message: 'Solo se puede cerrar un formulario publicado',
+    });
+    await servicio.publicar(ANA, creado.id);
+    await expect(servicio.publicar(ANA, creado.id)).rejects.toMatchObject({ tipo: 'conflicto' });
+  });
+
+  it('responde validación al publicar un formulario sin preguntas', async () => {
+    const { servicio, registro } = crearEscenario();
+    const vacio = await servicio.crear(ANA, { ...datos, preguntas: [] });
+
+    await expect(servicio.publicar(ANA, vacio.id)).rejects.toMatchObject({ tipo: 'validacion' });
+    expect(registro.filas.get(vacio.id)?.estado).toBe('borrador');
+  });
+
+  it('responde conflicto si otra petición cambió el estado entre la lectura y el UPDATE', async () => {
+    const { servicio, registro } = crearEscenario();
+    const creado = await servicio.crear(ANA, datos);
+    // Simula la carrera: la lectura ve "borrador", pero el UPDATE condicionado ya no aplica.
+    registro.cambiarEstado = async () => false;
+
+    await expect(servicio.publicar(ANA, creado.id)).rejects.toMatchObject({
+      tipo: 'conflicto',
+      message: 'El estado del formulario cambió; vuelve a intentarlo',
+    });
+  });
+
+  it('no permite publicar ni cerrar un formulario ajeno', async () => {
+    const { servicio } = crearEscenario();
+    const deAna = await servicio.crear(ANA, datos);
+
+    await expect(servicio.publicar(BETO, deAna.id)).rejects.toMatchObject({ tipo: 'no_encontrado' });
+    await expect(servicio.cerrar(BETO, deAna.id)).rejects.toMatchObject({ tipo: 'no_encontrado' });
+  });
+});
