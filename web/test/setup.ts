@@ -8,6 +8,14 @@ import { servidor } from './servidor';
 // jsdom tampoco implementa scrollIntoView (no hay layout): basta con que exista.
 Element.prototype.scrollIntoView ??= function () {};
 
+// Recharts (ResponsiveContainer) observa el tamaño del contenedor; jsdom no tiene ResizeObserver.
+// Las pruebas verifican los datos de los gráficos por su tabla accesible, no por el SVG.
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.setAttribute('open', '');
