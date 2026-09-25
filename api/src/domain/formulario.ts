@@ -91,6 +91,68 @@ export interface Formulario {
   actualizadoEn: Date;
 }
 
+// ---------------------------------------------------------------------------
+// Versionado
+// ---------------------------------------------------------------------------
+
+/** Las preguntas de una versión. reemplazadaEn es null para la versión vigente. */
+export interface VersionFormulario {
+  version: number;
+  preguntas: Pregunta[];
+  reemplazadaEn: Date | null;
+}
+
+/** Devuelve las preguntas de la versión pedida, o null si esa versión no existe. */
+export function preguntasDeVersion(versiones: VersionFormulario[], version: number): Pregunta[] | null {
+  return versiones.find((v) => v.version === version)?.preguntas ?? null;
+}
+
+export type ModoEdicion = 'en_lugar' | 'nueva_version';
+
+/**
+ * Decide si una edición sobrescribe la versión vigente o crea una nueva.
+ * - Borrador: nunca se publicó, no puede tener respuestas → en el lugar.
+ * - Publicado o cerrado: si cambian las preguntas → nueva versión. Si solo cambian título o
+ *   descripción, no afecta cómo se interpretan las respuestas → en el lugar.
+ * Se usa el estado y no "tiene respuestas" para evitar una carrera: una respuesta podría llegar
+ * entre el chequeo y la escritura y quedar asociada a preguntas que ya no existen.
+ */
+export function decidirEdicion(estado: EstadoFormulario, anteriores: Pregunta[], nuevas: Pregunta[]): ModoEdicion {
+  if (estado === 'borrador' || sonMismasPreguntas(anteriores, nuevas)) return 'en_lugar';
+  return 'nueva_version';
+}
+
+/** Compara el contenido de las preguntas, en orden (reordenar también es un cambio). */
+export function sonMismasPreguntas(a: Pregunta[], b: Pregunta[]): boolean {
+  return a.length === b.length && a.every((pregunta, i) => firma(pregunta) === firma(b[i]!));
+}
+
+/** Representación canónica: no depende del orden de las propiedades del objeto (Mongo vs. Zod). */
+function firma(p: Pregunta): string {
+  return JSON.stringify([
+    p.id,
+    p.tipo,
+    p.texto,
+    p.obligatoria,
+    'opciones' in p ? p.opciones : null,
+    'minimo' in p ? [p.minimo, p.maximo] : null,
+  ]);
+}
+
+/**
+ * En un formulario ya publicado, una pregunta existente (mismo id) no puede cambiar de tipo:
+ * sus respuestas antiguas y nuevas tendrían formas incompatibles. Para otro tipo, se crea otra pregunta.
+ */
+export function validarCambioDeTipos(anteriores: Pregunta[], nuevas: Pregunta[]): string[] {
+  const tipoAnterior = new Map(anteriores.map((p) => [p.id, p.tipo]));
+  return nuevas.flatMap((pregunta, indice) => {
+    const tipo = tipoAnterior.get(pregunta.id);
+    return tipo !== undefined && tipo !== pregunta.tipo
+      ? [`Pregunta ${indice + 1}: no se puede cambiar el tipo de una pregunta ya publicada (de ${tipo} a ${pregunta.tipo}); crea una pregunta nueva`]
+      : [];
+  });
+}
+
 /** Reglas de negocio de la definición de un formulario. Devuelve la lista de errores (vacía si es válida). */
 export function validarDefinicion(preguntas: Pregunta[]): string[] {
   const errores: string[] = [];

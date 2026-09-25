@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { crearSlug, validarDefinicion, validarTransicion, type Pregunta } from '../../src/domain/formulario.js';
+import {
+  crearSlug,
+  decidirEdicion,
+  preguntasDeVersion,
+  validarCambioDeTipos,
+  validarDefinicion,
+  validarTransicion,
+  type Pregunta,
+} from '../../src/domain/formulario.js';
 
 const texto = (id: string): Pregunta => ({ id, tipo: 'texto_corto', texto: '¿Nombre?', obligatoria: true });
 
@@ -103,5 +111,79 @@ describe('validarTransicion (máquina de estados)', () => {
 
   it('sí permite cerrar un formulario aunque no tenga preguntas', () => {
     expect(validarTransicion('cerrar', 'publicado', 0)).toBeNull();
+  });
+});
+
+describe('Versionado: decidirEdicion', () => {
+  const favorito: Pregunta = { id: 'fav', tipo: 'opcion_unica', texto: '¿Favorito?', obligatoria: false, opciones: ['A', 'B'] };
+  const nota: Pregunta = { id: 'nota', tipo: 'escala', texto: 'Nota', obligatoria: true, minimo: 1, maximo: 5 };
+  const anteriores = [favorito, nota];
+
+  it('en borrador siempre edita en el lugar, aunque cambien las preguntas', () => {
+    expect(decidirEdicion('borrador', anteriores, [nota])).toBe('en_lugar');
+  });
+
+  it.each(['publicado', 'cerrado'] as const)('en %s, con las mismas preguntas, edita en el lugar', (estado) => {
+    // Mismo contenido, con las propiedades en otro orden (como llegan de Zod vs. Mongo).
+    const mismas: Pregunta[] = [
+      { opciones: ['A', 'B'], obligatoria: false, texto: '¿Favorito?', tipo: 'opcion_unica', id: 'fav' },
+      { ...nota },
+    ];
+
+    expect(decidirEdicion(estado, anteriores, mismas)).toBe('en_lugar');
+  });
+
+  it.each([
+    ['cambia el texto', [{ ...favorito, texto: '¿Cuál prefieres?' }, nota]],
+    ['agrega una opción', [{ ...favorito, opciones: ['A', 'B', 'C'] }, nota]],
+    ['cambia obligatoria', [favorito, { ...nota, obligatoria: false }]],
+    ['cambia el rango de la escala', [favorito, { ...nota, maximo: 10 }]],
+    ['reordena', [nota, favorito]],
+    ['quita una pregunta', [favorito]],
+    ['agrega una pregunta', [favorito, nota, { id: 'x', tipo: 'fecha', texto: 'x', obligatoria: false }]],
+  ] as [string, Pregunta[]][])('en publicado, si %s, crea una versión nueva', (_caso, nuevas) => {
+    expect(decidirEdicion('publicado', anteriores, nuevas)).toBe('nueva_version');
+  });
+});
+
+describe('Versionado: validarCambioDeTipos', () => {
+  const anteriores: Pregunta[] = [
+    { id: 'fav', tipo: 'opcion_unica', texto: 'x', obligatoria: false, opciones: ['A', 'B'] },
+    { id: 'nota', tipo: 'escala', texto: 'x', obligatoria: false, minimo: 1, maximo: 5 },
+  ];
+
+  it('acepta mantener los tipos, quitar preguntas y agregar preguntas nuevas', () => {
+    const nuevas: Pregunta[] = [
+      { id: 'nota', tipo: 'escala', texto: 'otro texto', obligatoria: true, minimo: 0, maximo: 10 },
+      { id: 'nueva', tipo: 'texto_corto', texto: 'x', obligatoria: false },
+    ];
+
+    expect(validarCambioDeTipos(anteriores, nuevas)).toEqual([]);
+  });
+
+  it('rechaza cambiar el tipo de una pregunta existente (mismo id)', () => {
+    const nuevas: Pregunta[] = [{ id: 'fav', tipo: 'opcion_multiple', texto: 'x', obligatoria: false, opciones: ['A', 'B'] }];
+
+    expect(validarCambioDeTipos(anteriores, nuevas)).toEqual([
+      'Pregunta 1: no se puede cambiar el tipo de una pregunta ya publicada (de opcion_unica a opcion_multiple); crea una pregunta nueva',
+    ]);
+  });
+});
+
+describe('Versionado: preguntasDeVersion', () => {
+  const v1: Pregunta[] = [{ id: 'a', tipo: 'texto_corto', texto: 'v1', obligatoria: false }];
+  const v2: Pregunta[] = [{ id: 'b', tipo: 'fecha', texto: 'v2', obligatoria: false }];
+  const versiones = [
+    { version: 1, preguntas: v1, reemplazadaEn: new Date() },
+    { version: 2, preguntas: v2, reemplazadaEn: null },
+  ];
+
+  it('devuelve las preguntas de la vigente y de una anterior', () => {
+    expect(preguntasDeVersion(versiones, 2)).toBe(v2);
+    expect(preguntasDeVersion(versiones, 1)).toBe(v1);
+  });
+
+  it('devuelve null si la versión no existe', () => {
+    expect(preguntasDeVersion(versiones, 3)).toBeNull();
   });
 });
