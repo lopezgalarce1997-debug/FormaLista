@@ -18,6 +18,8 @@ const Registro = perezosa(() => import('./paginas/auth/Registro'), 'Registro');
 const ListaFormularios = perezosa(() => import('./paginas/formularios/ListaFormularios'), 'ListaFormularios');
 const PaginaEditor = perezosa(() => import('./paginas/editor/PaginaEditor'), 'PaginaEditor');
 const PaginaResultados = perezosa(() => import('./paginas/resultados/PaginaResultados'), 'PaginaResultados');
+const ListaEquipos = perezosa(() => import('./paginas/equipos/ListaEquipos'), 'ListaEquipos');
+const PaginaEquipo = perezosa(() => import('./paginas/equipos/PaginaEquipo'), 'PaginaEquipo');
 const PaginaPublica = perezosa(() => import('./paginas/publico/PaginaPublica'), 'PaginaPublica');
 
 /** Mientras se descarga el archivo de la página, se muestra "Cargando…". */
@@ -42,6 +44,8 @@ export const rutas = createRoutesFromElements(
         <Route path="/formularios" element={conCarga(<ListaFormularios />)} />
         <Route path="/formularios/:id/editar" element={conCarga(<PaginaEditor />)} />
         <Route path="/formularios/:id/resultados" element={conCarga(<PaginaResultados />)} />
+        <Route path="/equipos" element={conCarga(<ListaEquipos />)} />
+        <Route path="/equipos/:id" element={conCarga(<PaginaEquipo />)} />
       </Route>
     </Route>
 

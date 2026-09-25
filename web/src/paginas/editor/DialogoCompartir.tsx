@@ -70,7 +70,7 @@ export function DialogoCompartir({ detalle, abierto, alCerrar, alCompartir }: Pr
               opcion(e.id, e.nombre, `${e.cantidadMiembros} ${e.cantidadMiembros === 1 ? 'miembro' : 'miembros'} · tu rol: ${e.rol}`),
             )}
             {equipos.data.length === 0 && (
-              <p className="p-2 text-sm text-slate-500">Aún no perteneces a ningún equipo. Podrás crearlos en la sección Equipos.</p>
+              <p className="p-2 text-sm text-slate-500">Aún no perteneces a ningún equipo. Puedes crearlos en la sección Equipos.</p>
             )}
           </div>
         )}

@@ -22,6 +22,9 @@ export function Layout() {
             <NavLink to="/formularios" className={enlace}>
               Formularios
             </NavLink>
+            <NavLink to="/equipos" className={enlace}>
+              Equipos
+            </NavLink>
           </nav>
           <div className="ml-auto flex items-center gap-3">
             <span className="hidden text-sm text-slate-600 sm:inline">{usuario?.nombre}</span>

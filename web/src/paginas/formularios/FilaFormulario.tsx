@@ -19,7 +19,7 @@ export function FilaFormulario({ formulario, alEliminar }: { formulario: Resumen
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="truncate font-medium text-slate-900">{titulo}</h2>
           <InsigniaEstado estado={estado} />
-          {rol !== 'propietario' && equipo && <InsigniaCompartido equipo={equipo.nombre} rol={rol} />}
+          {rol !== 'propietario' && equipo && <InsigniaCompartido equipo={equipo} rol={rol} />}
         </div>
         <p className="mt-1 text-sm text-slate-500">
           {cantidadPreguntas === 1 ? '1 pregunta' : `${cantidadPreguntas} preguntas`} · Actualizado {haceTiempo(actualizadoEn)}
