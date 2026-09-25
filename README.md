@@ -38,13 +38,17 @@
 
 ## Capturas
 
-| Editor | Resultados |
-|---|---|
-| ![Editor de un formulario publicado, con el aviso de versionado](docs/capturas/editor.png) | ![Resultados con indicadores, respuestas por día y el detalle de una pregunta](docs/capturas/resultados.png) |
+**Mis formularios:** formularios propios en cada estado y uno compartido por un equipo.
 
-| Formulario público | Confirmación |
+![Lista de formularios en borrador, publicados y cerrados, con uno compartido por el equipo Experiencia de clientes](docs/capturas/mis-formularios.png)
+
+| Resultados | Respuestas individuales |
 |---|---|
-| ![Formulario público listo para responder](docs/capturas/publico.png) | ![Confirmación después de enviar la respuesta](docs/capturas/confirmacion.png) |
+| ![Resultados: respuestas por día, promedio y distribución de una escala, opciones y comentarios recientes](docs/capturas/resultados.png) | ![Listado de respuestas individuales con la fecha y la versión de cada una](docs/capturas/respuestas.png) |
+
+**Opción múltiple y fechas:** porcentajes sobre quienes respondieron y rango de fechas elegidas.
+
+![Resultados de una pregunta de opción múltiple y de una pregunta de fecha](docs/capturas/resultados-opciones.png)
 
 ## Stack
 
