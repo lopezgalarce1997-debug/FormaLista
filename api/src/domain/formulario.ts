@@ -40,6 +40,46 @@ export type Pregunta = PreguntaTexto | PreguntaOpciones | PreguntaEscala | Pregu
 
 export type EstadoFormulario = 'borrador' | 'publicado' | 'cerrado';
 
+export type AccionEstado = 'publicar' | 'cerrar';
+
+/**
+ * Máquina de estados del formulario:
+ *   borrador ──publicar──▶ publicado ──cerrar──▶ cerrado
+ *                              ▲                    │
+ *                              └─────publicar───────┘  (reabrir)
+ */
+export const TRANSICIONES: Record<AccionEstado, { desde: EstadoFormulario[]; hacia: EstadoFormulario }> = {
+  publicar: { desde: ['borrador', 'cerrado'], hacia: 'publicado' },
+  cerrar: { desde: ['publicado'], hacia: 'cerrado' },
+};
+
+export interface TransicionInvalida {
+  /** estado_invalido: la acción no aplica al estado actual. sin_preguntas: falta contenido. */
+  motivo: 'estado_invalido' | 'sin_preguntas';
+  mensaje: string;
+}
+
+/** Devuelve por qué no se puede aplicar la acción, o null si se puede. */
+export function validarTransicion(
+  accion: AccionEstado,
+  estadoActual: EstadoFormulario,
+  cantidadPreguntas: number,
+): TransicionInvalida | null {
+  if (!TRANSICIONES[accion].desde.includes(estadoActual)) {
+    const mensaje =
+      accion === 'publicar'
+        ? 'El formulario ya está publicado'
+        : estadoActual === 'cerrado'
+          ? 'El formulario ya está cerrado'
+          : 'Solo se puede cerrar un formulario publicado';
+    return { motivo: 'estado_invalido', mensaje };
+  }
+  if (accion === 'publicar' && cantidadPreguntas === 0) {
+    return { motivo: 'sin_preguntas', mensaje: 'No se puede publicar un formulario sin preguntas' };
+  }
+  return null;
+}
+
 export interface Formulario {
   id: string;
   titulo: string;

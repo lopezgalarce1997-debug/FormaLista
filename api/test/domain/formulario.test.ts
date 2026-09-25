@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { crearSlug, validarDefinicion, type Pregunta } from '../../src/domain/formulario.js';
+import { crearSlug, validarDefinicion, validarTransicion, type Pregunta } from '../../src/domain/formulario.js';
 
 const texto = (id: string): Pregunta => ({ id, tipo: 'texto_corto', texto: '¿Nombre?', obligatoria: true });
 
@@ -74,5 +74,34 @@ describe('crearSlug', () => {
 
   it('usa "formulario" si el título no tiene letras ni números', () => {
     expect(crearSlug('☕☕☕', 'x')).toBe('formulario-x');
+  });
+});
+
+describe('validarTransicion (máquina de estados)', () => {
+  it.each([
+    ['publicar', 'borrador', 'publicado'],
+    ['publicar', 'cerrado', 'publicado (reabrir)'],
+    ['cerrar', 'publicado', 'cerrado'],
+  ] as const)('permite %s desde %s → %s', (accion, estado, _resultado) => {
+    expect(validarTransicion(accion, estado, 3)).toBeNull();
+  });
+
+  it.each([
+    ['publicar', 'publicado', 'El formulario ya está publicado'],
+    ['cerrar', 'cerrado', 'El formulario ya está cerrado'],
+    ['cerrar', 'borrador', 'Solo se puede cerrar un formulario publicado'],
+  ] as const)('rechaza %s desde %s', (accion, estado, mensaje) => {
+    expect(validarTransicion(accion, estado, 3)).toEqual({ motivo: 'estado_invalido', mensaje });
+  });
+
+  it('no permite publicar un formulario sin preguntas', () => {
+    expect(validarTransicion('publicar', 'borrador', 0)).toEqual({
+      motivo: 'sin_preguntas',
+      mensaje: 'No se puede publicar un formulario sin preguntas',
+    });
+  });
+
+  it('sí permite cerrar un formulario aunque no tenga preguntas', () => {
+    expect(validarTransicion('cerrar', 'publicado', 0)).toBeNull();
   });
 });
