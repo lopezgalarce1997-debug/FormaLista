@@ -1,20 +1,17 @@
-import { type EntradaRespuestas, type Formulario, type Pregunta, preguntasDeVersion, validarRespuestas } from '@formalista/compartido';
+import {
+  type ConfirmacionRespuesta,
+  type EntradaRespuestas,
+  type Formulario,
+  type FormularioPublico,
+  type Pregunta,
+  preguntasDeVersion,
+  validarRespuestas,
+} from '@formalista/compartido';
 import { ErrorAplicacion } from './errores.js';
 import type { RepositorioFormularios, RepositorioRegistroFormularios, RepositorioRespuestas } from './puertos.js';
 
-/** Lo que ve quien responde: sin ids internos, propietario ni fechas de edición. */
-export interface FormularioPublico {
-  slug: string;
-  titulo: string;
-  descripcion: string;
-  version: number;
-  preguntas: Pregunta[];
-}
-
-export interface ConfirmacionRespuesta {
-  id: string;
-  enviadaEn: Date;
-}
+// Contratos de respuesta: definidos en el paquete compartido (los usa también la web).
+export type { ConfirmacionRespuesta, FormularioPublico } from '@formalista/compartido';
 
 /** Casos de uso sin autenticación: ver un formulario publicado y responderlo. */
 export class ServicioPublico {

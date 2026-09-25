@@ -1,12 +1,15 @@
-import { normalizarEmail, type RolEquipo, validarCambioDeMiembro } from '@formalista/compartido';
+import {
+  type DetalleEquipo,
+  type EquipoDeUsuario,
+  normalizarEmail,
+  type RolEquipo,
+  validarCambioDeMiembro,
+} from '@formalista/compartido';
 import { ErrorAplicacion } from './errores.js';
-import type { Equipo, EquipoDeUsuario, Miembro, RepositorioEquipos, RepositorioUsuarios } from './puertos.js';
+import type { RepositorioEquipos, RepositorioUsuarios } from './puertos.js';
 
-export interface DetalleEquipo extends Equipo {
-  /** Rol del usuario que consulta. */
-  rol: RolEquipo;
-  miembros: Miembro[];
-}
+// Contrato de respuesta: definido en el paquete compartido (lo usa también la web).
+export type { DetalleEquipo } from '@formalista/compartido';
 
 /**
  * Gestión de equipos. Mismo criterio que con formularios:

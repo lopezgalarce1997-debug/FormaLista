@@ -1,5 +1,6 @@
 // Código compartido entre la API y la web: dominio puro (sin dependencias de infraestructura)
 // y esquemas de entrada. Todo aquí debe funcionar igual en Node y en el navegador.
+export * from './contratos.js';
 export * from './dominio/estadisticas.js';
 export * from './dominio/formulario.js';
 export * from './dominio/permisos.js';

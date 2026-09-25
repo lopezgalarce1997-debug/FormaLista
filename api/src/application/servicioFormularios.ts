@@ -1,5 +1,20 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { type AccionEstado, type AccionFormulario, crearSlug, decidirEdicion, type EstadoFormulario, type Formulario, type Pregunta, rolEnFormulario, type RolFormulario, TRANSICIONES, validarCambioDeTipos, validarDefinicion, validarTransicion } from '@formalista/compartido';
+import {
+  type AccionEstado,
+  type AccionFormulario,
+  crearSlug,
+  decidirEdicion,
+  type EquipoCompartido,
+  type Formulario,
+  type FormularioDetalle,
+  type Pregunta,
+  type ResumenFormulario,
+  rolEnFormulario,
+  TRANSICIONES,
+  validarCambioDeTipos,
+  validarDefinicion,
+  validarTransicion,
+} from '@formalista/compartido';
 import { autorizar, formularioNoEncontrado, type AccesoAutorizado } from './acceso.js';
 import { ErrorAplicacion } from './errores.js';
 import type {
@@ -27,28 +42,8 @@ export interface DatosActualizacion extends DatosFormulario {
   version: number;
 }
 
-export interface EquipoCompartido {
-  id: number;
-  nombre: string;
-}
-
-/** Lo que ve un usuario de un formulario: contenido + estado + SU rol (el frontend decide qué botones mostrar). */
-export type FormularioDetalle = Formulario & {
-  estado: EstadoFormulario;
-  rol: RolFormulario;
-  equipo: EquipoCompartido | null;
-};
-
-export interface ResumenFormulario {
-  id: string;
-  titulo: string;
-  estado: EstadoFormulario;
-  rol: RolFormulario;
-  equipo: EquipoCompartido | null;
-  cantidadPreguntas: number;
-  creadoEn: Date;
-  actualizadoEn: Date;
-}
+// Contratos de respuesta: definidos en el paquete compartido (los usa también la web).
+export type { EquipoCompartido, FormularioDetalle, ResumenFormulario } from '@formalista/compartido';
 
 /**
  * Consistencia entre bases: un formulario EXISTE solo si tiene fila en MySQL (formularios_registro).
@@ -108,6 +103,7 @@ export class ServicioFormularios {
         {
           id: formulario.id,
           titulo: formulario.titulo,
+          slug: formulario.slug,
           estado: acceso.registro.estado,
           rol,
           equipo: equipoDe(acceso),

@@ -73,7 +73,9 @@ describe('API de formularios', () => {
     const { body: creado } = await comoAna(request(app).post('/api/formularios')).send(cuerpo);
 
     const lista = await comoAna(request(app).get('/api/formularios'));
-    expect(lista.body.formularios).toEqual([expect.objectContaining({ id: creado.id, cantidadPreguntas: 3 })]);
+    expect(lista.body.formularios).toEqual([
+      expect.objectContaining({ id: creado.id, slug: creado.slug, cantidadPreguntas: 3 }), // slug: para el link público
+    ]);
 
     const detalle = await comoAna(request(app).get(`/api/formularios/${creado.id}`));
     expect(detalle.status).toBe(200);

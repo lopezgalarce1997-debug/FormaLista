@@ -1,6 +1,19 @@
 // Interfaces que la capa de aplicación necesita y que infrastructure implementa
 // (como las interfaces IRepository de la capa Application en Clean Architecture .NET).
-import type { AgregadosCrudos, EstadoFormulario, Formulario, MiembroActual, Pregunta, RespuestaValidada, RolEquipo, Usuario, VersionFormulario } from '@formalista/compartido';
+import type {
+  AgregadosCrudos,
+  Equipo,
+  EquipoDeUsuario,
+  EstadoFormulario,
+  Formulario,
+  Miembro,
+  MiembroActual,
+  Pregunta,
+  RespuestaValidada,
+  RolEquipo,
+  Usuario,
+  VersionFormulario,
+} from '@formalista/compartido';
 
 export interface NuevoUsuario {
   nombre: string;
@@ -66,23 +79,8 @@ export interface RepositorioRegistroFormularios {
 
 // ---- Equipos (MySQL) ----
 
-export interface Equipo {
-  id: number;
-  nombre: string;
-  creadoEn: Date;
-}
-
-export interface EquipoDeUsuario extends Equipo {
-  rol: RolEquipo;
-  cantidadMiembros: number;
-}
-
-export interface Miembro {
-  usuarioId: number;
-  nombre: string;
-  email: string;
-  rol: RolEquipo;
-}
+// Contratos de respuesta: definidos en el paquete compartido (los usa también la web).
+export type { Equipo, EquipoDeUsuario, Miembro } from '@formalista/compartido';
 
 export interface RepositorioEquipos {
   /** Crea el equipo y agrega al creador como propietario, en una transacción. */

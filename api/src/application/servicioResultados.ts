@@ -1,4 +1,12 @@
-import { construirResultados, idsPorTipo, type Resultados, type SeleccionVersion, type TipoPregunta, type ValorRespuesta, type VersionFormulario } from '@formalista/compartido';
+import {
+  construirResultados,
+  idsPorTipo,
+  type PaginaRespuestas,
+  type Resultados,
+  type SeleccionVersion,
+  type TipoPregunta,
+  type VersionFormulario,
+} from '@formalista/compartido';
 import { autorizar, formularioNoEncontrado } from './acceso.js';
 import { ErrorAplicacion } from './errores.js';
 import type {
@@ -8,21 +16,8 @@ import type {
   RepositorioRespuestas,
 } from './puertos.js';
 
-export interface RespuestaListada {
-  id: string;
-  enviadaEn: Date;
-  version: number;
-  /** Cada valor con el texto y el tipo de la pregunta EN SU VERSIÓN. */
-  respuestas: { preguntaId: string; pregunta: string | null; tipo: TipoPregunta | null; valor: ValorRespuesta }[];
-}
-
-export interface PaginaRespuestas {
-  pagina: number;
-  tamano: number;
-  total: number;
-  totalPaginas: number;
-  respuestas: RespuestaListada[];
-}
+// Contratos de respuesta: definidos en el paquete compartido (los usa también la web).
+export type { PaginaRespuestas, RespuestaListada } from '@formalista/compartido';
 
 /** Estadísticas y listado de respuestas de un formulario (cualquier rol con acceso: acción 'verResultados'). */
 export class ServicioResultados {
