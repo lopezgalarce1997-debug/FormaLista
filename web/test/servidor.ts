@@ -6,6 +6,7 @@ export const ana = { id: 1, nombre: 'Ana', email: 'ana@correo.cl', creadoEn: '20
 /** Por defecto no hay sesión (como un navegador sin la cookie). Cada prueba agrega lo que necesita. */
 export const servidor = setupServer(
   http.get('/api/auth/yo', () => HttpResponse.json({ error: 'Falta el token de acceso' }, { status: 401 })),
+  http.get('/api/formularios', () => HttpResponse.json({ formularios: [] })),
 );
 
 /** Simula una cookie de sesión válida: /auth/yo devuelve a Ana. */
