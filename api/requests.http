@@ -104,6 +104,31 @@ Content-Type: application/json
   "preguntas": [{ "tipo": "opcion_unica", "texto": "¿Sí?", "opciones": ["Sí"] }]
 }
 
+# ======================= Publicar y responder =======================
+
+### Publicar (requiere al menos 1 pregunta; desde borrador o cerrado)
+POST {{baseUrl}}/formularios/{{formulario.response.body.id}}/publicar
+Authorization: Bearer {{login.response.body.token}}
+
+### Ver el formulario público (SIN token: así lo ve quien responde)
+GET {{baseUrl}}/publico/{{formulario.response.body.slug}}
+
+### Responder (SIN token). Claves = id de cada pregunta: cópialos del GET anterior.
+# Máximo 10 envíos por IP cada 15 minutos (luego responde 429).
+POST {{baseUrl}}/publico/{{formulario.response.body.slug}}/respuestas
+Content-Type: application/json
+
+{
+  "respuestas": {
+    "REEMPLAZA-ID-PREGUNTA-1": "Ana",
+    "REEMPLAZA-ID-PREGUNTA-2": "Latte"
+  }
+}
+
+### Cerrar (después, el link público responde 410)
+POST {{baseUrl}}/formularios/{{formulario.response.body.id}}/cerrar
+Authorization: Bearer {{login.response.body.token}}
+
 ### Eliminar (espera 204; borra también sus respuestas)
 DELETE {{baseUrl}}/formularios/{{formulario.response.body.id}}
 Authorization: Bearer {{login.response.body.token}}
