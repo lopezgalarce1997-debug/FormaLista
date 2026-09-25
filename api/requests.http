@@ -114,7 +114,7 @@ Authorization: Bearer {{login.response.body.token}}
 GET {{baseUrl}}/publico/{{formulario.response.body.slug}}
 
 ### Responder (SIN token). Claves = id de cada pregunta: cópialos del GET anterior.
-# Máximo 10 envíos por IP cada 15 minutos (luego responde 429).
+# Máximo 60 envíos por IP cada 15 minutos por defecto (LIMITE_RESPUESTAS_* en .env); luego responde 429.
 POST {{baseUrl}}/publico/{{formulario.response.body.slug}}/respuestas
 Content-Type: application/json
 
