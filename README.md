@@ -52,9 +52,13 @@
 
 **Responder desde el celular:** el link público no requiere cuenta.
 
-| Formulario | Resto de las preguntas | Confirmación |
-|---|---|---|
-| <img src="docs/capturas/publico-movil.png" alt="Formulario público en el celular: opción única y escala" width="250"> | <img src="docs/capturas/publico-movil-2.png" alt="Formulario público en el celular: opción múltiple, fecha y texto" width="250"> | <img src="docs/capturas/confirmacion-movil.png" alt="Confirmación de respuesta registrada en el celular" width="250"> |
+| Formulario | Resto de las preguntas |
+|---|---|
+| <img src="docs/capturas/publico-movil.png" alt="Formulario público en el celular: opción única y escala" width="300"> | <img src="docs/capturas/publico-movil-2.png" alt="Formulario público en el celular: opción múltiple, fecha y texto" width="300"> |
+
+| Errores de validación | Confirmación |
+|---|---|
+| <img src="docs/capturas/errores-movil.png" alt="Resumen de errores con enlaces a cada pregunta y el error bajo la pregunta" width="300"> | <img src="docs/capturas/confirmacion-movil.png" alt="Confirmación de respuesta registrada en el celular" width="300"> |
 
 ## Stack
 
