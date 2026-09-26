@@ -92,8 +92,10 @@ describe('Formulario público: validar y enviar', () => {
 
     await usuario.click(enviar());
 
-    const resumen = await screen.findByRole('heading', { name: 'Hay 2 respuestas por corregir' });
-    await waitFor(() => expect(resumen.parentElement).toHaveFocus());
+    // La validación es en el cliente: el resumen ya está al terminar el clic (getBy, sin esperar).
+    const resumen = screen.getByRole('heading', { name: 'Hay 2 respuestas por corregir' });
+    // Sin waitFor: el foco debe estar en el resumen en cuanto aparece, no un cuadro después.
+    expect(resumen.parentElement).toHaveFocus();
     const enlaces = within(resumen.parentElement!).getAllByRole('link');
     expect(enlaces.map((e) => e.textContent)).toEqual(['¿Tu nombre? — Es obligatoria', '¿Favorito? — Es obligatoria']);
     // …y también bajo cada pregunta, asociado al campo (aria-describedby).

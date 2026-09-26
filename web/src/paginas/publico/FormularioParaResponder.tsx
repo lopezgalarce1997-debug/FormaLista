@@ -1,6 +1,6 @@
 import { validarRespuestas, type Pregunta } from '@formalista/compartido';
 import { useMutation } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ErrorApi } from '../../api/cliente';
 import { apiPublico, type FormularioParaResponder as Formulario } from '../../api/publico';
 import { CampoPregunta } from '../../componentes/CampoPregunta';
@@ -24,6 +24,8 @@ export function FormularioParaResponder({ formulario }: { formulario: Formulario
   const [errores, setErrores] = useState<Errores>({});
   const [estadoFinal, setEstadoFinal] = useState<'enviado' | 'cerrado' | null>(null);
   const resumen = useRef<HTMLDivElement>(null);
+  // Cuenta los intentos fallidos: cada uno debe llevar el foco al resumen, aunque los errores se repitan.
+  const [intentosConErrores, setIntentosConErrores] = useState(0);
 
   const enviar = useMutation({
     mutationFn: () => apiPublico.responder(slug, { respuestas, version }),
@@ -46,9 +48,15 @@ export function FormularioParaResponder({ formulario }: { formulario: Formulario
 
   const mostrarErrores = (nuevos: Errores) => {
     setErrores(nuevos);
-    // Después de pintar el resumen, el foco va a él: el lector de pantalla lo anuncia completo.
-    requestAnimationFrame(() => resumen.current?.focus());
+    setIntentosConErrores((n) => n + 1);
   };
+
+  // El foco va al resumen para que el lector de pantalla lo anuncie completo. useLayoutEffect corre en
+  // el mismo render que lo muestra, antes de cualquier otro clic. (Con requestAnimationFrame el foco
+  // llegaba un cuadro después y podía quitárselo a la pregunta si alguien ya había usado un enlace.)
+  useLayoutEffect(() => {
+    if (intentosConErrores > 0) resumen.current?.focus();
+  }, [intentosConErrores]);
 
   const alEnviar = (evento: React.FormEvent) => {
     evento.preventDefault();

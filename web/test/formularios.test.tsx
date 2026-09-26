@@ -176,6 +176,8 @@ describe('Mis formularios: crear', () => {
         cuerpo = await request.json();
         return HttpResponse.json(resumen({ id: 'nuevo-1', titulo: 'Clima 2026' }), { status: 201 });
       }),
+      // El editor que se abre después pide el formulario recién creado.
+      http.get('/api/formularios/nuevo-1', () => HttpResponse.json(detalleDePrueba({ id: 'nuevo-1', titulo: 'Clima 2026' }))),
     );
     const { usuario } = renderizarApp('/formularios');
 
