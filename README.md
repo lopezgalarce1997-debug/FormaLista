@@ -50,6 +50,12 @@
 
 ![Resultados de una pregunta de opción múltiple y de una pregunta de fecha](docs/capturas/resultados-opciones.png)
 
+**Responder desde el celular:** el link público no requiere cuenta.
+
+| Formulario | Resto de las preguntas | Confirmación |
+|---|---|---|
+| <img src="docs/capturas/publico-movil.png" alt="Formulario público en el celular: opción única y escala" width="250"> | <img src="docs/capturas/publico-movil-2.png" alt="Formulario público en el celular: opción múltiple, fecha y texto" width="250"> | <img src="docs/capturas/confirmacion-movil.png" alt="Confirmación de respuesta registrada en el celular" width="250"> |
+
 ## Stack
 
 | Capa | Tecnología | Por qué |
